@@ -1,149 +1,79 @@
-const CONTENT_KEY = "bea-admin-content-v1";
-const EVENTS_KEY = "bea-admin-events-v1";
+const COLLECTIONS = {
+  research: {
+    singular: "research project",
+    fields: ["category", "status", "summary", "year"],
+  },
+  events: {
+    singular: "event",
+    fields: ["category", "date", "summary"],
+  },
+  news: {
+    singular: "news story",
+    fields: ["category", "date", "summary", "image"],
+  },
+  team: {
+    singular: "team role",
+    fields: ["category", "summary"],
+  },
+  gallery: {
+    singular: "gallery image",
+    fields: ["category", "image"],
+  },
+};
 
-const initialContent = [
-  {
-    id: "c1",
-    title: "LUANAR takes it home",
-    type: "News",
-    status: "Published",
-    updated: "Oct 24, 2026",
-    summary: "Celebrating a remarkable debate victory, powered by our community.",
-  },
-  {
-    id: "c2",
-    title: "Resilient value chains for smallholder agriculture",
-    type: "Research",
-    status: "Published",
-    updated: "Oct 21, 2026",
-    summary: "Examining pathways to more productive, inclusive agricultural markets.",
-  },
-  {
-    id: "c3",
-    title: "Trip to MRA",
-    type: "Event",
-    status: "Published",
-    updated: "Oct 18, 2026",
-    summary: "An institutional visit connecting students to Malawi’s economic landscape.",
-  },
-  {
-    id: "c4",
-    title: "AgrinoPact partnership opens new possibilities",
-    type: "News",
-    status: "Draft",
-    updated: "Oct 16, 2026",
-    summary: "A meaningful collaboration that expands our network and practical reach.",
-  },
-  {
-    id: "c5",
-    title: "Resource stewardship and rural resilience",
-    type: "Research",
-    status: "Draft",
-    updated: "Oct 12, 2026",
-    summary: "An investigation into economic incentives for sustainable practice.",
-  },
-  {
-    id: "c6",
-    title: "Learning by doing: our research tools approach",
-    type: "News",
-    status: "Published",
-    updated: "Oct 08, 2026",
-    summary: "Building confidence in Stata, R, data analysis and academic writing.",
-  },
-];
+const FIELD_LABELS = {
+  category: "Category / label",
+  status: "Project status",
+  date: "Date",
+  year: "Year",
+  summary: "Description",
+  image: "Image URL",
+};
 
-const initialEvents = [
-  { id: "e1", title: "Trip to MRA", date: "2026-11-18", category: "Field visit" },
-  { id: "e2", title: "Alumni Day", date: "2026-11-07", category: "Alumni" },
-  {
-    id: "e3",
-    title: "Banner & Certificate Presentation",
-    date: "2026-09-09",
-    category: "Academic",
-  },
-  {
-    id: "e4",
-    title: "First Year’s Orientation Week",
-    date: "2026-08-27",
-    category: "Orientation",
-  },
-];
-
-function load(key, fallback) {
-  try {
-    return JSON.parse(localStorage.getItem(key)) || fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-let content = load(CONTENT_KEY, initialContent);
-let events = load(EVENTS_KEY, initialEvents);
-
-const rows = document.querySelector("#content-rows");
-const search = document.querySelector("#content-search");
-const filter = document.querySelector("#content-filter");
+const profileForm = document.querySelector("#profile-form");
+const itemDialog = document.querySelector("#item-dialog");
+const itemForm = document.querySelector("#item-form");
 const toast = document.querySelector("#toast");
+const savedIndicator = document.querySelector("#saved-indicator");
+let siteData;
 let toastTimer;
+let activeCollection;
+let uploadedLogoData = "";
 
-function save() {
-  localStorage.setItem(CONTENT_KEY, JSON.stringify(content));
-  localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
-}
-
-function notify(message) {
+function showToast(message, isError = false) {
   toast.textContent = message;
+  toast.classList.toggle("toast-error", isError);
   toast.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 2800);
 }
 
-function renderContent() {
-  const term = search.value.trim().toLowerCase();
-  const status = filter.value;
-  const visible = content.filter(
-    (item) =>
-      item.title.toLowerCase().includes(term) &&
-      (status === "all" || item.status === status),
-  );
+function setSaveState(state, message) {
+  savedIndicator.classList.toggle("saving", state === "saving");
+  savedIndicator.classList.toggle("error", state === "error");
+  savedIndicator.lastChild.textContent = ` ${message}`;
+}
 
-  rows.innerHTML =
-    visible
-      .map((item) => {
-        const icon =
-          item.type === "News"
-            ? "▤"
-            : item.type === "Research"
-              ? "⌕"
-              : item.type === "Event"
-                ? "◷"
-                : "▧";
-        const draftClass = item.status === "Draft" ? "draft" : "";
+async function request(url, options = {}) {
+  const response = await fetch(url, {
+    credentials: "same-origin",
+    ...options,
+    headers: {
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...options.headers,
+    },
+  });
 
-        return `
-          <tr>
-            <td><span class="type-icon">${icon}</span>${escapeHtml(item.title)}</td>
-            <td>${escapeHtml(item.type)}</td>
-            <td><span class="status-pill ${draftClass}">${item.status}</span></td>
-            <td>${escapeHtml(item.updated)}</td>
-            <td>
-              <button
-                class="row-actions"
-                data-action="edit"
-                data-id="${item.id}"
-                aria-label="Edit ${escapeHtml(item.title)}"
-              >···</button>
-            </td>
-          </tr>`;
-      })
-      .join("") || '<tr><td colspan="5">No content matches this search.</td></tr>';
+  if (response.status === 401) {
+    location.replace("admin-login.html");
+    throw new Error("Your session has ended. Please sign in again.");
+  }
 
-  document.querySelector("#stat-content").textContent = String(
-    content.length,
-  ).padStart(2, "0");
-  document.querySelector("#content-nav-count").textContent = content.length;
-  document.querySelector("#content-summary").textContent =
-    `Showing ${visible.length} of ${content.length} items`;
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.error || "The request could not be completed.");
+  }
+  return result;
 }
 
 function escapeHtml(value) {
@@ -154,170 +84,256 @@ function escapeHtml(value) {
     '"': "&quot;",
     "'": "&#39;",
   };
-
-  return String(value).replace(/[&<>"']/g, (character) => entities[character]);
+  return String(value || "").replace(/[&<>"']/g, (character) => entities[character]);
 }
 
-function renderEvents() {
-  const today = new Date().toLocaleDateString("en-CA");
-  const upcoming = events
-    .filter((event) => event.date >= today)
-    .sort((first, second) => first.date.localeCompare(second.date));
-
-  document.querySelector("#event-list").innerHTML =
-    upcoming
-      .slice(0, 4)
-      .map((event) => {
-        const date = new Date(`${event.date}T12:00:00`);
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = date.toLocaleString("en", { month: "short" }).toUpperCase();
-
-        return `
-          <article class="event-item">
-            <div class="event-date"><b>${day}</b><small>${month} ${date.getFullYear()}</small></div>
-            <div>
-              <strong>${escapeHtml(event.title)}</strong>
-              <p>${escapeHtml(event.category || "BEA event")}</p>
-            </div>
-            <button
-              class="delete-event"
-              data-event-delete="${event.id}"
-              aria-label="Remove ${escapeHtml(event.title)}"
-            >×</button>
-          </article>`;
-      })
-      .join("") || '<p class="empty-events">No upcoming events yet.</p>';
-
-  document.querySelector("#stat-events").textContent = String(
-    upcoming.length,
-  ).padStart(2, "0");
+function populateProfile() {
+  for (const [name, value] of Object.entries(siteData.profile)) {
+    const field = profileForm.elements.namedItem(name);
+    if (field && field.type !== "file") field.value = value || "";
+  }
 }
 
-function openContent(item) {
-  contentForm.reset();
-  contentForm.elements.id.value = item?.id || "";
-  contentForm.elements.title.value = item?.title || "";
-  contentForm.elements.type.value = item?.type || "News";
-  contentForm.elements.status.value = item?.status || "Draft";
-  contentForm.elements.summary.value = item?.summary || "";
-  document.querySelector("#dialog-title").textContent = item
-    ? "Edit content"
-    : "Create content";
-  contentDialog.showModal();
+function renderCount() {
+  for (const collection of Object.keys(COLLECTIONS)) {
+    document.querySelector(`#count-${collection}`).textContent =
+      siteData[collection].length;
+  }
 }
 
-renderContent();
-renderEvents();
+function renderCollection(collection) {
+  const target = document.querySelector(`#list-${collection}`);
+  const records = siteData[collection];
+  target.classList.toggle("gallery-managed", collection === "gallery");
 
-document.querySelector("#today-label").textContent = new Date().toLocaleDateString(
-  "en",
-  { weekday: "short", month: "short", day: "numeric", year: "numeric" },
-);
-search.addEventListener("input", renderContent);
-filter.addEventListener("change", renderContent);
-
-const contentDialog = document.querySelector("#content-dialog");
-const contentForm = document.querySelector("#content-form");
-
-document
-  .querySelector("#new-content")
-  .addEventListener("click", () => openContent());
-document
-  .querySelector("#add-content")
-  .addEventListener("click", () => openContent());
-
-rows.addEventListener("click", (event) => {
-  const button = event.target.closest('[data-action="edit"]');
-  if (!button) return;
-
-  const item = content.find((entry) => entry.id === button.dataset.id);
-  if (item) openContent(item);
-});
-
-contentForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  const data = new FormData(contentForm);
-  const id = data.get("id");
-  const item = {
-    id: id || `c${Date.now()}`,
-    title: data.get("title").trim(),
-    type: data.get("type"),
-    status: data.get("status"),
-    summary: data.get("summary").trim(),
-    updated: new Date().toLocaleDateString("en", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-    }),
-  };
-  const index = content.findIndex((entry) => entry.id === id);
-
-  if (index >= 0) {
-    content[index] = item;
-  } else {
-    content.unshift(item);
+  if (!records.length) {
+    target.innerHTML = '<p class="empty-list">No items yet. Use the button above to add one.</p>';
+    return;
   }
 
-  save();
-  renderContent();
-  contentDialog.close();
-  notify(id ? "Content updated." : "Content created.");
+  target.replaceChildren();
+  for (const item of records) {
+    const row = document.createElement("article");
+    row.className = "managed-item";
+
+    const main = document.createElement("div");
+    main.className = "managed-item-main";
+    if (item.image) {
+      const image = document.createElement("img");
+      image.className = "managed-thumb";
+      image.src = item.image;
+      image.alt = "";
+      image.loading = "lazy";
+      main.append(image);
+    }
+
+    const copy = document.createElement("div");
+    copy.className = "managed-item-copy";
+    const title = document.createElement("strong");
+    title.textContent = item.title;
+    const detail = document.createElement("small");
+    detail.textContent = [item.category, item.status, item.date, item.year]
+      .filter(Boolean)
+      .join(" · ");
+    copy.append(title, detail);
+    main.append(copy);
+
+    const actions = document.createElement("div");
+    actions.className = "item-actions";
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.dataset.action = "edit";
+    edit.dataset.collection = collection;
+    edit.dataset.id = item.id;
+    edit.textContent = "Edit";
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "delete-item";
+    remove.dataset.action = "delete";
+    remove.dataset.collection = collection;
+    remove.dataset.id = item.id;
+    remove.textContent = "Delete";
+    actions.append(edit, remove);
+    row.append(main, actions);
+    target.append(row);
+  }
+}
+
+function renderAll() {
+  populateProfile();
+  renderCount();
+  for (const collection of Object.keys(COLLECTIONS)) {
+    renderCollection(collection);
+  }
+}
+
+async function saveSite(successMessage) {
+  setSaveState("saving", "Saving changes…");
+  try {
+    await request("/api/admin/site", {
+      method: "PUT",
+      body: JSON.stringify(siteData),
+    });
+    setSaveState("saved", "All changes saved");
+    if (successMessage) showToast(successMessage);
+  } catch (error) {
+    setSaveState("error", "Save failed");
+    showToast(error.message, true);
+  }
+}
+
+function setItemFormFields(collection) {
+  const visibleFields = COLLECTIONS[collection].fields;
+  for (const field of Object.keys(FIELD_LABELS)) {
+    const wrap = document.querySelector(`#${field}-wrap`);
+    const visible = visibleFields.includes(field);
+    wrap.hidden = !visible;
+    const input = itemForm.elements.namedItem(field);
+    input.required = visible && ["category", "date"].includes(field);
+  }
+}
+
+function openItemEditor(collection, item = null) {
+  activeCollection = collection;
+  itemForm.reset();
+  setItemFormFields(collection);
+  itemForm.elements.id.value = item?.id || "";
+  itemForm.elements.title.value = item?.title || "";
+  for (const field of Object.keys(FIELD_LABELS)) {
+    itemForm.elements[field].value = item?.[field] || "";
+  }
+  const config = COLLECTIONS[collection];
+  document.querySelector("#item-kicker").textContent = collection.toUpperCase();
+  document.querySelector("#item-dialog-title").textContent = item
+    ? `Edit ${config.singular}`
+    : `Add ${config.singular}`;
+  itemDialog.showModal();
+}
+
+async function initialise() {
+  try {
+    const session = await request("/api/session");
+    if (!session.authenticated) {
+      location.replace("admin-login.html");
+      return;
+    }
+    siteData = await request("/api/admin/site");
+    renderAll();
+  } catch (error) {
+    showToast(error.message, true);
+    setTimeout(() => location.replace("admin-login.html?server=required"), 1200);
+  }
+}
+
+profileForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const formData = new FormData(profileForm);
+  for (const [name, value] of formData.entries()) {
+    if (!['logoFile', 'logo'].includes(name)) {
+      siteData.profile[name] = String(value).trim();
+    }
+  }
+  const logoUrl = profileForm.elements.logo.value.trim();
+  if (uploadedLogoData) siteData.profile.logo = uploadedLogoData;
+  else if (logoUrl) siteData.profile.logo = logoUrl;
+  await saveSite("Main profile updated. The public site now uses your changes.");
+});
+
+profileForm.elements.logo.addEventListener("input", () => {
+  uploadedLogoData = "";
+  profileForm.elements.logoFile.value = "";
+});
+
+profileForm.elements.logoFile.addEventListener("change", async (event) => {
+  const file = event.currentTarget.files[0];
+  if (!file) return;
+  if (file.size > 700_000) {
+    showToast("Please choose a logo image smaller than 700 KB.", true);
+    event.currentTarget.value = "";
+    return;
+  }
+  try {
+    uploadedLogoData = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("This image could not be read."));
+      reader.readAsDataURL(file);
+    });
+  } catch (error) {
+    showToast(error.message, true);
+    return;
+  }
+  profileForm.elements.logo.value = "";
+  showToast("Logo loaded. Save the main profile to publish it.");
+});
+
+document.querySelectorAll("[data-add]").forEach((button) => {
+  button.addEventListener("click", () => openItemEditor(button.dataset.add));
+});
+
+document.querySelectorAll(".managed-list").forEach((list) => {
+  list.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-action]");
+    if (!button) return;
+    const { action, collection, id } = button.dataset;
+    const item = siteData[collection].find((entry) => entry.id === id);
+
+    if (action === "edit") {
+      openItemEditor(collection, item);
+      return;
+    }
+
+    if (!confirm(`Delete “${item.title}” from the public website?`)) return;
+    siteData[collection] = siteData[collection].filter((entry) => entry.id !== id);
+    renderCollection(collection);
+    renderCount();
+    await saveSite("Item removed from the public website.");
+  });
+});
+
+itemForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const formData = new FormData(itemForm);
+  const id = formData.get("id");
+  const record = {
+    id: id || `${activeCollection}-${crypto.randomUUID()}`,
+    title: String(formData.get("title")).trim(),
+  };
+  for (const field of COLLECTIONS[activeCollection].fields) {
+    record[field] = String(formData.get(field) || "").trim();
+  }
+
+  const records = siteData[activeCollection];
+  const index = records.findIndex((item) => item.id === id);
+  if (index < 0) records.unshift(record);
+  else records[index] = record;
+
+  itemDialog.close();
+  renderCollection(activeCollection);
+  renderCount();
+  await saveSite(`${COLLECTIONS[activeCollection].singular} saved.`);
 });
 
 document.querySelectorAll("[data-close]").forEach((button) => {
   button.addEventListener("click", () => button.closest("dialog").close());
 });
 
-const eventDialog = document.querySelector("#event-dialog");
-const eventForm = document.querySelector("#event-form");
-eventForm.elements.date.min = new Date().toLocaleDateString("en-CA");
-
-document
-  .querySelector("#add-event")
-  .addEventListener("click", () => eventDialog.showModal());
-
-eventForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  const data = new FormData(eventForm);
-  events.push({
-    id: `e${Date.now()}`,
-    title: data.get("title").trim(),
-    date: data.get("date"),
-    category: data.get("category").trim() || "BEA event",
-  });
-
-  save();
-  renderEvents();
-  eventDialog.close();
-  eventForm.reset();
-  notify("Event added to your calendar.");
+document.querySelector("#sign-out").addEventListener("click", async () => {
+  await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
+  location.assign("admin-login.html");
 });
 
-document.querySelector("#event-list").addEventListener("click", (event) => {
-  const button = event.target.closest("[data-event-delete]");
-  if (!button) return;
-
-  events = events.filter((item) => item.id !== button.dataset.eventDelete);
-  save();
-  renderEvents();
-  notify("Event removed.");
-});
-
-document
-  .querySelector("#settings-button")
-  .addEventListener("click", () =>
-    notify("Site settings are ready to connect to your website configuration."),
-  );
-document
-  .querySelector("#profile-menu")
-  .addEventListener("click", () => notify("Signed in as BEA Admin."));
 document.querySelector("#mobile-menu").addEventListener("click", () => {
-  document.querySelector(".sidebar").classList.toggle("open");
+  document.querySelector("#sidebar").classList.toggle("open");
 });
-document.querySelectorAll('.side-nav a[href^="#"]').forEach((link) => {
+
+document.querySelectorAll(".side-nav a").forEach((link) => {
   link.addEventListener("click", () => {
-    document.querySelector(".sidebar").classList.remove("open");
+    document.querySelector("#sidebar").classList.remove("open");
+    document.querySelectorAll(".side-nav a").forEach((item) => {
+      item.classList.toggle("active", item === link);
+    });
   });
 });
+
+initialise();

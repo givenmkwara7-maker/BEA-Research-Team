@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Admin sign in | BEA Research Team</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="login.css" />
+  </head>
+  <body>
+    <main class="login-layout">
+      <section class="login-art" aria-label="Bunda Economics Association">
+        <a class="back-link" href="index.html">← Back to website</a>
+        <div class="art-copy">
+          <img src="bea-logo.jpg" alt="Bunda Economics Association logo" />
+          <p class="eyebrow">BUNDA ECONOMICS ASSOCIATION</p>
+          <h1>Research with purpose.<br /><em>Leadership with impact.</em></h1>
+          <p>Manage the stories, research, people and events that make up the BEA Research Team website.</p>
+        </div>
+        <span class="art-campus">LUANAR · BUNDA CAMPUS · MALAWI</span>
+      </section>
+      <section class="login-main">
+        <form class="login-card" id="login-form">
+          <p class="eyebrow">ADMINISTRATION</p>
+          <h2>Welcome back</h2>
+          <p class="login-intro">Sign in to manage the BEA website.</p>
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" autocomplete="username" required autofocus />
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+          <p class="login-error" id="login-error" role="alert" hidden></p>
+          <button class="login-button" type="submit">Sign in <span>→</span></button>
+          <p class="login-footnote">Access is limited to authorised BEA administrators.</p>
+        </form>
+      </section>
+    </main>
+    <script src="login.js"></script>
+  </body>
+</html>

@@ -3,213 +3,127 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="BEA Research Team administration dashboard." />
-    <title>Admin Dashboard | BEA Research Team
-    </title>
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Website Admin | BEA Research Team</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="admin.css" />
   </head>
   <body>
-    <aside class="sidebar"><a class="admin-brand" href="index.html">
-      <img src="bea-logo.jpg" alt="Bunda Economics Association logo" /><span><strong>BEA</strong><small>RESEARCH TEAM</small></span></a>
-      <div class="side-label">WORKSPACE
-      </div>
-      <nav class="side-nav" aria-label="Admin navigation"><a class="active" href="#overview"><span>▦</span> Overview</a><a href="#content"><span>▤</span> Content <b id="content-nav-count">6</b></a><a href="#events"><span>◷</span> Events</a><a href="#inquiries"><span>✉</span> Inquiries <b class="nav-alert">3</b></a><a href="#settings"><span>⚙</span> Site settings</a>
+    <aside class="sidebar" id="sidebar">
+      <a class="admin-brand" href="index.html">
+        <img src="bea-logo.jpg" alt="Bunda Economics Association logo" />
+        <span><strong>BEA</strong><small>WEBSITE ADMIN</small></span>
+      </a>
+      <p class="side-label">MANAGE WEBSITE</p>
+      <nav class="side-nav" aria-label="Website management">
+        <a class="active" href="#overview"><span>▦</span> Overview</a>
+        <a href="#profile"><span>◉</span> Main profile</a>
+        <a href="#research"><span>⌕</span> Research</a>
+        <a href="#events"><span>◷</span> Events & activities</a>
+        <a href="#news"><span>▤</span> News</a>
+        <a href="#team"><span>♙</span> Team</a>
+        <a href="#gallery"><span>▧</span> Gallery</a>
       </nav>
       <div class="sidebar-bottom">
-        <div class="admin-profile"><span class="avatar">BA</span><span><strong>BEA Admin</strong><small>Site administrator</small></span><button id="profile-menu" aria-label="Account options">···</button>
-        </div><a class="view-site" href="index.html" target="_blank" rel="noreferrer">↗ &nbsp; View live website</a>
+        <a class="view-site" href="index.html" target="_blank" rel="noreferrer">↗ &nbsp; View public website</a>
+        <div class="admin-profile">
+          <span class="avatar">BA</span>
+          <span><strong>Site administrator</strong><small>Signed in</small></span>
+          <button id="sign-out" type="button" aria-label="Sign out">↪</button>
+        </div>
       </div>
     </aside>
+
     <main class="dashboard" id="overview">
-      <header class="topbar"><button class="mobile-menu" id="mobile-menu" aria-label="Toggle menu">☰</button>
-        <div class="breadcrumbs">Workspace <span>/</span><strong>Overview</strong>
-        </div>
-        <div class="top-actions"><span class="today" id="today-label"></span><button class="icon-button" aria-label="Notifications">♧<i></i></button><span class="avatar">BA</span>
-        </div>
+      <header class="topbar">
+        <button class="mobile-menu" id="mobile-menu" type="button" aria-label="Toggle menu">☰</button>
+        <div class="breadcrumbs">BEA website <span>/</span> <strong>Management</strong></div>
+        <a class="public-link" href="index.html" target="_blank" rel="noreferrer">Open public site ↗</a>
       </header>
+
       <div class="page-content">
         <section class="welcome-row">
           <div>
-            <p class="eyebrow">TUESDAY, OCTOBER 27, 2026
-            </p>
-            <h1>Good morning, Admin <span>☀</span>
-            </h1>
-            <p>Here’s what’s happening across your BEA website today.
-            </p>
-          </div><button class="primary-button" id="new-content"><span>＋</span> Create content</button>
+            <p class="eyebrow">WEBSITE MANAGEMENT</p>
+            <h1>Manage your website</h1>
+            <p>Update what visitors see on the BEA Research Team website.</p>
+          </div>
+          <span class="saved-indicator" id="saved-indicator"><i></i> All changes saved</span>
         </section>
-        <section class="stat-grid" aria-label="Website summary">
-          <article class="stat-card">
-            <div class="stat-icon green">▤
-            </div><span class="stat-label">Total content</span><strong id="stat-content">06</strong><small><span class="positive">↑ 2</span> this month</small>
-            <div class="sparkline green-line">▁▂▂▄▃▅▆▅▇
-            </div>
-          </article>
-          <article class="stat-card">
-            <div class="stat-icon gold">◷
-            </div><span class="stat-label">Upcoming events</span><strong id="stat-events">04</strong><small>Next event <b>in 22 days</b></small>
-            <div class="sparkline gold-line">▂▁▃▂▄▃▆▇▅
-            </div>
-          </article>
-          <article class="stat-card">
-            <div class="stat-icon blue">◉
-            </div><span class="stat-label">Page visits <span class="period">Last 30 days⌄</span></span><strong>2,481</strong><small><span class="positive">↑ 12.8%</span> vs previous month</small>
-            <div class="sparkline blue-line">▁▃▂▄▃▅▄▆▇
-            </div>
-          </article>
-          <article class="stat-card">
-            <div class="stat-icon coral">✉
-            </div><span class="stat-label">New inquiries</span><strong>03</strong><small><b>2</b> need a response</small>
-            <div class="sparkline coral-line">▁▂▁▃▂▄▃▅▆
-            </div>
-          </article>
+
+        <section class="stat-grid" aria-label="Published content summary">
+          <a class="stat-card" href="#research"><span class="stat-icon green">⌕</span><span>Research projects</span><strong id="count-research">—</strong><small>Manage public research</small></a>
+          <a class="stat-card" href="#events"><span class="stat-icon gold">◷</span><span>Events & activities</span><strong id="count-events">—</strong><small>Manage the event calendar</small></a>
+          <a class="stat-card" href="#news"><span class="stat-icon blue">▤</span><span>News stories</span><strong id="count-news">—</strong><small>Manage public updates</small></a>
+          <a class="stat-card" href="#team"><span class="stat-icon coral">♙</span><span>Team roles</span><strong id="count-team">—</strong><small>Manage the executive</small></a>
         </section>
-        <section class="panel content-panel" id="content">
+
+        <section class="panel profile-panel" id="profile">
           <div class="panel-heading">
-            <div>
-              <p class="eyebrow">PUBLISHING
-              </p>
-              <h2>Recent content
-              </h2>
-            </div>
-            <div class="panel-tools"><label class="search-field"><span>⌕</span>
-              <input id="content-search" type="search" placeholder="Search content" /></label><select id="content-filter" aria-label="Filter content">
-              <option value="all">All content
-              </option>
-              <option value="Published">Published
-              </option>
-              <option value="Draft">Draft
-              </option></select><button class="primary-button compact" id="add-content">＋ New content</button>
-            </div>
+            <div><p class="eyebrow">PUBLIC WEBSITE</p><h2>Main profile & homepage</h2><p class="panel-description">These details appear in the header, homepage, contact section and footer.</p></div>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>TITLE
-                  </th>
-                  <th>TYPE
-                  </th>
-                  <th>STATUS
-                  </th>
-                  <th>LAST UPDATED
-                  </th>
-                  <th>
-                  </th>
-                </tr>
-              </thead>
-              <tbody id="content-rows">
-              </tbody>
-            </table>
-          </div>
-          <div class="table-footer"><span id="content-summary">Showing all content</span><span>Changes are saved in this browser</span>
-          </div>
+          <form id="profile-form" class="profile-form">
+            <label>Association name<input name="name" required maxlength="100" /></label>
+            <label>Short name<input name="shortName" required maxlength="16" /></label>
+            <label>Campus / location<input name="campus" maxlength="120" /></label>
+            <label>Public tagline<input name="tagline" maxlength="160" /></label>
+            <label class="wide-field">Homepage heading<input name="heroTitle" required maxlength="140" /></label>
+            <label class="wide-field">Homepage introduction<textarea name="heroCopy" rows="3" maxlength="500"></textarea></label>
+            <label class="wide-field">About heading<input name="aboutTitle" maxlength="140" /></label>
+            <label class="wide-field">About description<textarea name="aboutCopy" rows="4" maxlength="1000"></textarea></label>
+            <label>Contact email<input name="contactEmail" type="email" maxlength="160" /></label>
+            <label>Logo image URL<input name="logo" maxlength="300" /></label>
+            <label class="wide-field upload-label">Or upload a logo image<input name="logoFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" /><small>Images are stored with your website data. Keep the file under 700 KB.</small></label>
+            <div class="profile-actions"><button class="primary-button" type="submit">Save main profile</button><span>Visitors see updates after saving and refreshing the site.</span></div>
+          </form>
         </section>
-        <div class="lower-grid">
-          <section class="panel events-panel" id="events">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">WHAT’S NEXT
-                </p>
-                <h2>Upcoming events
-                </h2>
-              </div><a class="subtle-link" href="events.html">View calendar ↗</a>
-            </div>
-            <div id="event-list" class="event-list">
-            </div><button class="add-event" id="add-event">＋ &nbsp; Add event</button>
-          </section>
-          <section class="panel inquiry-panel" id="inquiries">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">INBOX
-                </p>
-                <h2>Recent inquiries
-                </h2>
-              </div><button class="more-button" aria-label="More inquiries">···</button>
-            </div>
-            <article class="inquiry"><span class="contact-avatar sand">JM</span>
-              <div><strong>James Mbewe</strong><small>Research collaboration</small>
-                <p>Interested in partnering on a student research project…
-                </p>
-              </div><time>2h</time>
-            </article>
-            <article class="inquiry"><span class="contact-avatar lilac">TK</span>
-              <div><strong>Thoko Kamanga</strong><small>Partnership proposal</small>
-                <p>We’d like to discuss an upcoming training opportunity…
-                </p>
-              </div><time>1d</time>
-            </article>
-            <article class="inquiry"><span class="contact-avatar mint">CM</span>
-              <div><strong>Chisomo Moyo</strong><small>General question</small>
-                <p>Could you share more details about the next event?
-                </p>
-              </div><time>2d</time>
-            </article><a class="all-inquiries" href="mailto:bea.research@luanar.ac.mw">Open inbox <span>→</span></a>
-          </section>
-        </div>
-        <section class="settings-bar" id="settings">
-          <div><span class="settings-icon">⚙</span>
-            <div><strong>Website settings</strong><small>Manage your site details and contact information.</small>
-            </div>
-          </div><button id="settings-button">Manage settings <span>→</span></button>
+
+        <section class="panel manager-panel" id="research" data-collection="research">
+          <div class="panel-heading"><div><p class="eyebrow">KNOWLEDGE HUB</p><h2>Research projects</h2><p class="panel-description">Shown on the home page and Research page.</p></div><button class="primary-button add-item" data-add="research" type="button">＋ Add research</button></div>
+          <div class="managed-list" id="list-research"></div>
         </section>
-        <footer class="dashboard-footer"><span>BEA Research Team Admin · v1.0</span><span>Built for Bunda Economics Association</span>
-        </footer>
+
+        <section class="panel manager-panel" id="events" data-collection="events">
+          <div class="panel-heading"><div><p class="eyebrow">CALENDAR</p><h2>Events & activities</h2><p class="panel-description">Shown on the home page and Events page.</p></div><button class="primary-button add-item" data-add="events" type="button">＋ Add event</button></div>
+          <div class="managed-list" id="list-events"></div>
+        </section>
+
+        <section class="panel manager-panel" id="news" data-collection="news">
+          <div class="panel-heading"><div><p class="eyebrow">NEWSROOM</p><h2>News stories</h2><p class="panel-description">Shown on the home page and News page.</p></div><button class="primary-button add-item" data-add="news" type="button">＋ Add story</button></div>
+          <div class="managed-list" id="list-news"></div>
+        </section>
+
+        <section class="panel manager-panel" id="team" data-collection="team">
+          <div class="panel-heading"><div><p class="eyebrow">PEOPLE</p><h2>Team & leadership</h2><p class="panel-description">Update the public executive structure and responsibilities.</p></div><button class="primary-button add-item" data-add="team" type="button">＋ Add team role</button></div>
+          <div class="managed-list" id="list-team"></div>
+        </section>
+
+        <section class="panel manager-panel" id="gallery" data-collection="gallery">
+          <div class="panel-heading"><div><p class="eyebrow">VISUAL ARCHIVE</p><h2>Gallery</h2><p class="panel-description">Add, edit or remove public gallery images.</p></div><button class="primary-button add-item" data-add="gallery" type="button">＋ Add image</button></div>
+          <div class="managed-list gallery-managed" id="list-gallery"></div>
+        </section>
+
+        <footer class="dashboard-footer"><span>BEA Research Team website manager</span><span>Changes are stored on this site server.</span></footer>
       </div>
     </main>
-    <dialog class="dialog" id="content-dialog">
-      <form id="content-form" method="dialog">
-        <div class="dialog-top">
-          <div>
-            <p class="eyebrow">CONTENT MANAGER
-            </p>
-            <h2 id="dialog-title">Create content
-            </h2>
-          </div><button type="button" class="dialog-close" data-close aria-label="Close">×</button>
-        </div>
-        <input type="hidden" name="id" /><label>Title
-        <input name="title" required maxlength="100" placeholder="Enter a clear title" /></label>
-        <div class="form-row"><label>Content type<select name="type">
-          <option>News
-          </option>
-          <option>Research
-          </option>
-          <option>Event
-          </option>
-          <option>Page
-          </option></select></label><label>Status<select name="status">
-          <option>Draft
-          </option>
-          <option>Published
-          </option></select></label>
-        </div><label>Summary<textarea name="summary" rows="4" maxlength="240" placeholder="A short description for your readers"></textarea></label>
-        <div class="dialog-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save content</button>
-        </div>
+
+    <dialog class="dialog" id="item-dialog">
+      <form id="item-form" method="dialog">
+        <div class="dialog-top"><div><p class="eyebrow" id="item-kicker">CONTENT</p><h2 id="item-dialog-title">Add item</h2></div><button class="dialog-close" data-close type="button" aria-label="Close">×</button></div>
+        <input type="hidden" name="id" />
+        <label>Title<input name="title" required maxlength="180" /></label>
+        <label id="category-wrap">Category / label<input name="category" maxlength="100" /></label>
+        <label id="status-wrap">Project status<input name="status" maxlength="60" /></label>
+        <label id="date-wrap">Date<input name="date" type="date" /></label>
+        <label id="year-wrap">Year<input name="year" maxlength="12" /></label>
+        <label id="summary-wrap">Description<textarea name="summary" rows="4" maxlength="1200"></textarea></label>
+        <label id="image-wrap">Image URL<input name="image" maxlength="1000" placeholder="https://…" /></label>
+        <div class="dialog-actions"><button class="secondary-button" data-close type="button">Cancel</button><button class="primary-button" type="submit">Save item</button></div>
       </form>
     </dialog>
-    <dialog class="dialog" id="event-dialog">
-      <form id="event-form" method="dialog">
-        <div class="dialog-top">
-          <div>
-            <p class="eyebrow">EVENTS
-            </p>
-            <h2>Add an event
-            </h2>
-          </div><button type="button" class="dialog-close" data-close aria-label="Close">×</button>
-        </div><label>Event name
-        <input name="title" required maxlength="90" placeholder="e.g. Research methods workshop" /></label>
-        <div class="form-row"><label>Date
-          <input name="date" type="date" required /></label><label>Category
-          <input name="category" maxlength="30" placeholder="Workshop" /></label>
-        </div>
-        <div class="dialog-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save event</button>
-        </div>
-      </form>
-    </dialog>
-    <div class="toast" id="toast" role="status" aria-live="polite">
-    </div><script src="admin.js"></script>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="admin.js"></script>
   </body>
 </html>

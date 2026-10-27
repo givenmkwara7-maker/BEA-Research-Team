@@ -1,0 +1,211 @@
+:root {
+  --ink: #173b35;
+  --green: #285e4e;
+  --gold: #e3bd62;
+  --muted: #73827a;
+  --line: #e5eae3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: #f7f8f5;
+  font-family: "DM Sans", sans-serif;
+}
+
+.login-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+}
+
+.login-art {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+  padding: 70px clamp(35px, 8vw, 125px);
+  color: white;
+  background:
+    linear-gradient(135deg, #123a31f2, #183f34dc),
+    url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1500&q=85") center / cover;
+}
+
+.back-link {
+  position: absolute;
+  top: 35px;
+  left: clamp(35px, 8vw, 125px);
+  color: #e1ebe4;
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.art-copy {
+  max-width: 590px;
+}
+
+.art-copy img {
+  display: block;
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 50%;
+  margin-bottom: 33px;
+}
+
+.eyebrow {
+  color: #8da991;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.art-copy .eyebrow {
+  color: #dfc374;
+}
+
+.art-copy h1 {
+  margin: 20px 0;
+  font: 600 clamp(2.4rem, 4vw, 4.2rem) / 1.1 "Playfair Display", serif;
+  letter-spacing: -0.03em;
+}
+
+.art-copy h1 em {
+  color: #e6c875;
+  font-weight: inherit;
+}
+
+.art-copy > p:last-child {
+  max-width: 430px;
+  color: #d4e1d8;
+  line-height: 1.8;
+}
+
+.art-campus {
+  position: absolute;
+  bottom: 32px;
+  left: clamp(35px, 8vw, 125px);
+  color: #c2d2c8;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+}
+
+.login-main {
+  display: grid;
+  place-items: center;
+  padding: 45px 25px;
+}
+
+.login-card {
+  width: min(100%, 390px);
+}
+
+.login-card .eyebrow {
+  margin-bottom: 12px;
+}
+
+.login-card h2 {
+  margin: 0;
+  font: 600 2rem "Playfair Display", serif;
+}
+
+.login-intro {
+  margin: 10px 0 30px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.login-card label {
+  display: block;
+  margin: 18px 0 7px;
+  color: #425a4f;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.login-card input {
+  width: 100%;
+  height: 45px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--ink);
+  outline-color: #7d9d7b;
+}
+
+.login-button {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 24px;
+  padding: 13px 15px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--green);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-button:hover {
+  background: #214e40;
+}
+
+.login-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.login-error {
+  margin: 12px 0 0;
+  color: #a74436;
+  font-size: 0.76rem;
+}
+
+.login-footnote {
+  margin-top: 23px;
+  color: #89958c;
+  font-size: 0.69rem;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .login-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .login-art {
+    min-height: 330px;
+    padding: 70px 27px 35px;
+  }
+
+  .back-link,
+  .art-campus {
+    left: 27px;
+  }
+
+  .art-copy img {
+    width: 58px;
+    height: 58px;
+    margin-bottom: 20px;
+  }
+
+  .art-copy h1 {
+    margin: 12px 0;
+    font-size: 2rem;
+  }
+
+  .art-copy > p:last-child {
+    font-size: 0.84rem;
+  }
+
+  .login-main {
+    padding: 45px 25px 55px;
+  }
+}
