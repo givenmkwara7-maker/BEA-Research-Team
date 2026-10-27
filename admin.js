@@ -87,6 +87,13 @@ function escapeHtml(value) {
   return String(value || "").replace(/[&<>"']/g, (character) => entities[character]);
 }
 
+function localDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function populateProfile() {
   for (const [name, value] of Object.entries(siteData.profile)) {
     const field = profileForm.elements.namedItem(name);
@@ -189,13 +196,17 @@ function setItemFormFields(collection) {
     const visible = visibleFields.includes(field);
     wrap.hidden = !visible;
     const input = itemForm.elements.namedItem(field);
-    input.required = visible && ["category", "date"].includes(field);
+    input.required =
+      visible &&
+      (["category", "date"].includes(field) ||
+        (collection === "gallery" && field === "image"));
   }
 }
 
 function openItemEditor(collection, item = null) {
   activeCollection = collection;
   itemForm.reset();
+  itemForm.elements.date.min = localDateString();
   setItemFormFields(collection);
   itemForm.elements.id.value = item?.id || "";
   itemForm.elements.title.value = item?.title || "";
@@ -319,8 +330,11 @@ document.querySelectorAll("[data-close]").forEach((button) => {
 });
 
 document.querySelector("#sign-out").addEventListener("click", async () => {
-  await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
-  location.assign("admin-login.html");
+  try {
+    await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
+  } finally {
+    location.assign("admin-login.html");
+  }
 });
 
 document.querySelector("#mobile-menu").addEventListener("click", () => {

@@ -2,6 +2,23 @@ const loginForm = document.querySelector("#login-form");
 const loginError = document.querySelector("#login-error");
 const loginButton = loginForm.querySelector("button[type=submit]");
 
+if (new URLSearchParams(location.search).has("server")) {
+  loginError.textContent =
+    "The admin panel needs the BEA Node server. Start it using the instructions in README.md, then open the server address.";
+  loginError.hidden = false;
+} else {
+  fetch("/api/session", { cache: "no-store" })
+    .then((response) => response.json())
+    .then((session) => {
+      if (session.authenticated) location.replace("admin.html");
+    })
+    .catch(() => {
+      loginError.textContent =
+        "Start the BEA Node server, then open the admin page from its address.";
+      loginError.hidden = false;
+    });
+}
+
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   loginError.hidden = true;

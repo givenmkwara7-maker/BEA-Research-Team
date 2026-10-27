@@ -24,6 +24,25 @@ const MIME_TYPES = {
   ".svg": "image/svg+xml",
   ".webp": "image/webp",
 };
+const PUBLIC_FILES = new Set([
+  "admin-login.html",
+  "admin.html",
+  "admin.css",
+  "admin.js",
+  "bea-logo.jpg",
+  "events.html",
+  "gallery.html",
+  "index.html",
+  "login.css",
+  "login.js",
+  "news.html",
+  "pages.css",
+  "research.html",
+  "script.js",
+  "site-content.js",
+  "styles.css",
+  "team.html",
+]);
 
 if (!USERNAME || !PASSWORD || PASSWORD.length < 12) {
   console.error(
@@ -44,11 +63,6 @@ function sendJson(response, statusCode, payload, extraHeaders = {}) {
   response.end(JSON.stringify(payload));
 }
 
-function requestOrigin(request) {
-  const protocol = request.socket.encrypted ? "https" : "http";
-  return `${protocol}://${request.headers.host}`;
-}
-
 function hasSameOrigin(request) {
   const origin = request.headers.origin;
   if (!origin) return true;
@@ -62,7 +76,12 @@ function hasSameOrigin(request) {
 function getCookie(request, name) {
   const cookies = request.headers.cookie || "";
   const match = cookies.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
-  return match ? decodeURIComponent(match[1]) : "";
+  if (!match) return "";
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return "";
+  }
 }
 
 function getSession(request) {
@@ -146,7 +165,16 @@ async function handleApi(request, response, url) {
       return;
     }
 
+    if (!credentials || typeof credentials !== "object") {
+      sendJson(response, 400, { error: "Enter a username and password." });
+      return;
+    }
+
     const password = typeof credentials.password === "string" ? credentials.password : "";
+    if (password.length > 256) {
+      sendJson(response, 400, { error: "Password is too long." });
+      return;
+    }
     const candidate = crypto.scryptSync(password, passwordSalt, 64);
     const usernameMatches = credentials.username === USERNAME;
     const passwordMatches = crypto.timingSafeEqual(candidate, configuredPassword);
@@ -225,7 +253,9 @@ async function handleApi(request, response, url) {
       return;
     }
     try {
-      await fs.writeFile(DATA_FILE, `${JSON.stringify(site, null, 2)}\n`, "utf8");
+      const temporaryFile = `${DATA_FILE}.${crypto.randomBytes(8).toString("hex")}.tmp`;
+      await fs.writeFile(temporaryFile, `${JSON.stringify(site, null, 2)}\n`, "utf8");
+      await fs.rename(temporaryFile, DATA_FILE);
       sendJson(response, 200, { saved: true });
     } catch {
       sendJson(response, 500, { error: "Site content could not be saved." });
@@ -251,6 +281,12 @@ async function serveFile(request, response, url) {
       "Cache-Control": "no-store",
     });
     response.end();
+    return;
+  }
+  const publicName = pathname.replace(/^\//, "");
+  if (!PUBLIC_FILES.has(publicName)) {
+    response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+    response.end("File not found");
     return;
   }
   const filename = path.resolve(ROOT, `.${pathname}`);

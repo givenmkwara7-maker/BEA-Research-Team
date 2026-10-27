@@ -659,6 +659,10 @@ a {
   opacity: 1;
 }
 
+.toast.toast-error {
+  background: #8a372d;
+}
+
 @media (max-width: 1080px) {
   .sidebar {
     width: 220px;

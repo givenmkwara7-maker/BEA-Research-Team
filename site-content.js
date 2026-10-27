@@ -16,6 +16,13 @@ function toLocalDate(dateValue) {
   return new Date(`${dateValue}T12:00:00`);
 }
 
+function localDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function formatEventDate(dateValue) {
   const date = toLocalDate(dateValue);
   return {
@@ -26,6 +33,11 @@ function formatEventDate(dateValue) {
 }
 
 function updateProfile(profile) {
+  const heroBackdrop = document.querySelector("#hero-backdrop");
+  if (heroBackdrop && profile.heroImage) {
+    heroBackdrop.style.backgroundImage =
+      `linear-gradient(90deg, #092b28e8 0%, #123e39c0 42%, #123e391c 100%), url(${JSON.stringify(profile.heroImage)})`;
+  }
   document.querySelectorAll(".brand-logo, .admin-brand img").forEach((image) => {
     image.src = profile.logo;
     image.alt = `${profile.name} logo`;
@@ -84,6 +96,7 @@ function renderResearch(research) {
 
   const spotlight = document.querySelector(".spotlight-card");
   const featured = research[0];
+  if (spotlight) spotlight.hidden = !featured;
   if (spotlight && featured) {
     setText(".tag", featured.status || "Research project", spotlight);
     setText("h3", featured.title, spotlight);
@@ -121,7 +134,7 @@ function renderEvents(events) {
 
   const homeList = document.querySelector(".program-layout .event-list");
   if (homeList) {
-    const today = new Date().toLocaleDateString("en-CA");
+    const today = localDateString();
     const upcoming = events.filter((event) => event.date >= today);
     homeList.replaceChildren();
     for (const item of upcoming.slice(0, 4)) {
@@ -145,6 +158,7 @@ function renderEvents(events) {
 
     const next = upcoming[0];
     const featured = document.querySelector(".next-event");
+    if (featured) featured.hidden = !next;
     if (next && featured) {
       const date = formatEventDate(next.date);
       setText(".event-date span", date.month, featured);
