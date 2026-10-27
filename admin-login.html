@@ -30,7 +30,10 @@
           <label for="username">Username</label>
           <input id="username" name="username" type="text" autocomplete="username" required autofocus />
           <label for="password">Password</label>
-          <input id="password" name="password" type="password" autocomplete="current-password" required />
+          <div class="password-field">
+            <input id="password" name="password" type="password" autocomplete="current-password" required />
+            <button class="password-toggle" id="password-toggle" type="button" aria-label="Show password" aria-pressed="false">Show</button>
+          </div>
           <p class="login-error" id="login-error" role="alert" hidden></p>
           <button class="login-button" type="submit">Sign in <span>→</span></button>
           <p class="login-footnote">Access is limited to authorised BEA administrators.</p>

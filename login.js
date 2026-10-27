@@ -1,6 +1,16 @@
 const loginForm = document.querySelector("#login-form");
 const loginError = document.querySelector("#login-error");
 const loginButton = loginForm.querySelector("button[type=submit]");
+const passwordInput = document.querySelector("#password");
+const passwordToggle = document.querySelector("#password-toggle");
+
+passwordToggle.addEventListener("click", () => {
+  const showPassword = passwordInput.type === "password";
+  passwordInput.type = showPassword ? "text" : "password";
+  passwordToggle.textContent = showPassword ? "Hide" : "Show";
+  passwordToggle.setAttribute("aria-label", `${showPassword ? "Hide" : "Show"} password`);
+  passwordToggle.setAttribute("aria-pressed", String(showPassword));
+});
 
 if (new URLSearchParams(location.search).has("server")) {
   loginError.textContent =
