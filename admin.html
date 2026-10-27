@@ -1,63 +1,215 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="BEA Research Team administration dashboard." />
-  <title>Admin Dashboard | BEA Research Team</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css" />
-</head>
-<body>
-  <aside class="sidebar">
-    <a class="admin-brand" href="index.html"><img src="bea-logo.jpg" alt="Bunda Economics Association logo" /><span><strong>BEA</strong><small>RESEARCH TEAM</small></span></a>
-    <div class="side-label">WORKSPACE</div>
-    <nav class="side-nav" aria-label="Admin navigation">
-      <a class="active" href="#overview"><span>▦</span> Overview</a>
-      <a href="#content"><span>▤</span> Content <b id="content-nav-count">6</b></a>
-      <a href="#events"><span>◷</span> Events</a>
-      <a href="#inquiries"><span>✉</span> Inquiries <b class="nav-alert">3</b></a>
-      <a href="#settings"><span>⚙</span> Site settings</a>
-    </nav>
-    <div class="sidebar-bottom"><div class="admin-profile"><span class="avatar">BA</span><span><strong>BEA Admin</strong><small>Site administrator</small></span><button id="profile-menu" aria-label="Account options">···</button></div><a class="view-site" href="index.html" target="_blank" rel="noreferrer">↗ &nbsp; View live website</a></div>
-  </aside>
-
-  <main class="dashboard" id="overview">
-    <header class="topbar"><button class="mobile-menu" id="mobile-menu" aria-label="Toggle menu">☰</button><div class="breadcrumbs">Workspace <span>/</span> <strong>Overview</strong></div><div class="top-actions"><span class="today" id="today-label"></span><button class="icon-button" aria-label="Notifications">♧<i></i></button><span class="avatar">BA</span></div></header>
-    <div class="page-content">
-      <section class="welcome-row"><div><p class="eyebrow">TUESDAY, OCTOBER 27, 2026</p><h1>Good morning, Admin <span>☀</span></h1><p>Here’s what’s happening across your BEA website today.</p></div><button class="primary-button" id="new-content"><span>＋</span> Create content</button></section>
-
-      <section class="stat-grid" aria-label="Website summary">
-        <article class="stat-card"><div class="stat-icon green">▤</div><span class="stat-label">Total content</span><strong id="stat-content">06</strong><small><span class="positive">↑ 2</span> this month</small><div class="sparkline green-line">▁▂▂▄▃▅▆▅▇</div></article>
-        <article class="stat-card"><div class="stat-icon gold">◷</div><span class="stat-label">Upcoming events</span><strong id="stat-events">04</strong><small>Next event <b>in 22 days</b></small><div class="sparkline gold-line">▂▁▃▂▄▃▆▇▅</div></article>
-        <article class="stat-card"><div class="stat-icon blue">◉</div><span class="stat-label">Page visits <span class="period">Last 30 days⌄</span></span><strong>2,481</strong><small><span class="positive">↑ 12.8%</span> vs previous month</small><div class="sparkline blue-line">▁▃▂▄▃▅▄▆▇</div></article>
-        <article class="stat-card"><div class="stat-icon coral">✉</div><span class="stat-label">New inquiries</span><strong>03</strong><small><b>2</b> need a response</small><div class="sparkline coral-line">▁▂▁▃▂▄▃▅▆</div></article>
-      </section>
-
-      <section class="panel content-panel" id="content"><div class="panel-heading"><div><p class="eyebrow">PUBLISHING</p><h2>Recent content</h2></div><div class="panel-tools"><label class="search-field"><span>⌕</span><input id="content-search" type="search" placeholder="Search content" /></label><select id="content-filter" aria-label="Filter content"><option value="all">All content</option><option value="Published">Published</option><option value="Draft">Draft</option></select><button class="primary-button compact" id="add-content">＋ New content</button></div></div>
-        <div class="table-wrap"><table><thead><tr><th>TITLE</th><th>TYPE</th><th>STATUS</th><th>LAST UPDATED</th><th></th></tr></thead><tbody id="content-rows"></tbody></table></div><div class="table-footer"><span id="content-summary">Showing all content</span><span>Changes are saved in this browser</span></div>
-      </section>
-
-      <div class="lower-grid">
-        <section class="panel events-panel" id="events"><div class="panel-heading"><div><p class="eyebrow">WHAT’S NEXT</p><h2>Upcoming events</h2></div><a class="subtle-link" href="events.html">View calendar ↗</a></div><div id="event-list" class="event-list"></div><button class="add-event" id="add-event">＋ &nbsp; Add event</button></section>
-        <section class="panel inquiry-panel" id="inquiries"><div class="panel-heading"><div><p class="eyebrow">INBOX</p><h2>Recent inquiries</h2></div><button class="more-button" aria-label="More inquiries">···</button></div>
-          <article class="inquiry"><span class="contact-avatar sand">JM</span><div><strong>James Mbewe</strong><small>Research collaboration</small><p>Interested in partnering on a student research project…</p></div><time>2h</time></article>
-          <article class="inquiry"><span class="contact-avatar lilac">TK</span><div><strong>Thoko Kamanga</strong><small>Partnership proposal</small><p>We’d like to discuss an upcoming training opportunity…</p></div><time>1d</time></article>
-          <article class="inquiry"><span class="contact-avatar mint">CM</span><div><strong>Chisomo Moyo</strong><small>General question</small><p>Could you share more details about the next event?</p></div><time>2d</time></article>
-          <a class="all-inquiries" href="mailto:bea.research@luanar.ac.mw">Open inbox <span>→</span></a>
-        </section>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="BEA Research Team administration dashboard." />
+    <title>Admin Dashboard | BEA Research Team
+    </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <aside class="sidebar"><a class="admin-brand" href="index.html">
+      <img src="bea-logo.jpg" alt="Bunda Economics Association logo" /><span><strong>BEA</strong><small>RESEARCH TEAM</small></span></a>
+      <div class="side-label">WORKSPACE
       </div>
-
-      <section class="settings-bar" id="settings"><div><span class="settings-icon">⚙</span><div><strong>Website settings</strong><small>Manage your site details and contact information.</small></div></div><button id="settings-button">Manage settings <span>→</span></button></section>
-      <footer class="dashboard-footer"><span>BEA Research Team Admin · v1.0</span><span>Built for Bunda Economics Association</span></footer>
-    </div>
-  </main>
-
-  <dialog class="dialog" id="content-dialog"><form id="content-form" method="dialog"><div class="dialog-top"><div><p class="eyebrow">CONTENT MANAGER</p><h2 id="dialog-title">Create content</h2></div><button type="button" class="dialog-close" data-close aria-label="Close">×</button></div><input type="hidden" name="id" /><label>Title<input name="title" required maxlength="100" placeholder="Enter a clear title" /></label><div class="form-row"><label>Content type<select name="type"><option>News</option><option>Research</option><option>Event</option><option>Page</option></select></label><label>Status<select name="status"><option>Draft</option><option>Published</option></select></label></div><label>Summary<textarea name="summary" rows="4" maxlength="240" placeholder="A short description for your readers"></textarea></label><div class="dialog-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save content</button></div></form></dialog>
-  <dialog class="dialog" id="event-dialog"><form id="event-form" method="dialog"><div class="dialog-top"><div><p class="eyebrow">EVENTS</p><h2>Add an event</h2></div><button type="button" class="dialog-close" data-close aria-label="Close">×</button></div><label>Event name<input name="title" required maxlength="90" placeholder="e.g. Research methods workshop" /></label><div class="form-row"><label>Date<input name="date" type="date" required /></label><label>Category<input name="category" maxlength="30" placeholder="Workshop" /></label></div><div class="dialog-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save event</button></div></form></dialog>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="admin.js"></script>
-</body>
+      <nav class="side-nav" aria-label="Admin navigation"><a class="active" href="#overview"><span>▦</span> Overview</a><a href="#content"><span>▤</span> Content <b id="content-nav-count">6</b></a><a href="#events"><span>◷</span> Events</a><a href="#inquiries"><span>✉</span> Inquiries <b class="nav-alert">3</b></a><a href="#settings"><span>⚙</span> Site settings</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="admin-profile"><span class="avatar">BA</span><span><strong>BEA Admin</strong><small>Site administrator</small></span><button id="profile-menu" aria-label="Account options">···</button>
+        </div><a class="view-site" href="index.html" target="_blank" rel="noreferrer">↗ &nbsp; View live website</a>
+      </div>
+    </aside>
+    <main class="dashboard" id="overview">
+      <header class="topbar"><button class="mobile-menu" id="mobile-menu" aria-label="Toggle menu">☰</button>
+        <div class="breadcrumbs">Workspace <span>/</span><strong>Overview</strong>
+        </div>
+        <div class="top-actions"><span class="today" id="today-label"></span><button class="icon-button" aria-label="Notifications">♧<i></i></button><span class="avatar">BA</span>
+        </div>
+      </header>
+      <div class="page-content">
+        <section class="welcome-row">
+          <div>
+            <p class="eyebrow">TUESDAY, OCTOBER 27, 2026
+            </p>
+            <h1>Good morning, Admin <span>☀</span>
+            </h1>
+            <p>Here’s what’s happening across your BEA website today.
+            </p>
+          </div><button class="primary-button" id="new-content"><span>＋</span> Create content</button>
+        </section>
+        <section class="stat-grid" aria-label="Website summary">
+          <article class="stat-card">
+            <div class="stat-icon green">▤
+            </div><span class="stat-label">Total content</span><strong id="stat-content">06</strong><small><span class="positive">↑ 2</span> this month</small>
+            <div class="sparkline green-line">▁▂▂▄▃▅▆▅▇
+            </div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-icon gold">◷
+            </div><span class="stat-label">Upcoming events</span><strong id="stat-events">04</strong><small>Next event <b>in 22 days</b></small>
+            <div class="sparkline gold-line">▂▁▃▂▄▃▆▇▅
+            </div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-icon blue">◉
+            </div><span class="stat-label">Page visits <span class="period">Last 30 days⌄</span></span><strong>2,481</strong><small><span class="positive">↑ 12.8%</span> vs previous month</small>
+            <div class="sparkline blue-line">▁▃▂▄▃▅▄▆▇
+            </div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-icon coral">✉
+            </div><span class="stat-label">New inquiries</span><strong>03</strong><small><b>2</b> need a response</small>
+            <div class="sparkline coral-line">▁▂▁▃▂▄▃▅▆
+            </div>
+          </article>
+        </section>
+        <section class="panel content-panel" id="content">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">PUBLISHING
+              </p>
+              <h2>Recent content
+              </h2>
+            </div>
+            <div class="panel-tools"><label class="search-field"><span>⌕</span>
+              <input id="content-search" type="search" placeholder="Search content" /></label><select id="content-filter" aria-label="Filter content">
+              <option value="all">All content
+              </option>
+              <option value="Published">Published
+              </option>
+              <option value="Draft">Draft
+              </option></select><button class="primary-button compact" id="add-content">＋ New content</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>TITLE
+                  </th>
+                  <th>TYPE
+                  </th>
+                  <th>STATUS
+                  </th>
+                  <th>LAST UPDATED
+                  </th>
+                  <th>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="content-rows">
+              </tbody>
+            </table>
+          </div>
+          <div class="table-footer"><span id="content-summary">Showing all content</span><span>Changes are saved in this browser</span>
+          </div>
+        </section>
+        <div class="lower-grid">
+          <section class="panel events-panel" id="events">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">WHAT’S NEXT
+                </p>
+                <h2>Upcoming events
+                </h2>
+              </div><a class="subtle-link" href="events.html">View calendar ↗</a>
+            </div>
+            <div id="event-list" class="event-list">
+            </div><button class="add-event" id="add-event">＋ &nbsp; Add event</button>
+          </section>
+          <section class="panel inquiry-panel" id="inquiries">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">INBOX
+                </p>
+                <h2>Recent inquiries
+                </h2>
+              </div><button class="more-button" aria-label="More inquiries">···</button>
+            </div>
+            <article class="inquiry"><span class="contact-avatar sand">JM</span>
+              <div><strong>James Mbewe</strong><small>Research collaboration</small>
+                <p>Interested in partnering on a student research project…
+                </p>
+              </div><time>2h</time>
+            </article>
+            <article class="inquiry"><span class="contact-avatar lilac">TK</span>
+              <div><strong>Thoko Kamanga</strong><small>Partnership proposal</small>
+                <p>We’d like to discuss an upcoming training opportunity…
+                </p>
+              </div><time>1d</time>
+            </article>
+            <article class="inquiry"><span class="contact-avatar mint">CM</span>
+              <div><strong>Chisomo Moyo</strong><small>General question</small>
+                <p>Could you share more details about the next event?
+                </p>
+              </div><time>2d</time>
+            </article><a class="all-inquiries" href="mailto:bea.research@luanar.ac.mw">Open inbox <span>→</span></a>
+          </section>
+        </div>
+        <section class="settings-bar" id="settings">
+          <div><span class="settings-icon">⚙</span>
+            <div><strong>Website settings</strong><small>Manage your site details and contact information.</small>
+            </div>
+          </div><button id="settings-button">Manage settings <span>→</span></button>
+        </section>
+        <footer class="dashboard-footer"><span>BEA Research Team Admin · v1.0</span><span>Built for Bunda Economics Association</span>
+        </footer>
+      </div>
+    </main>
+    <dialog class="dialog" id="content-dialog">
+      <form id="content-form" method="dialog">
+        <div class="dialog-top">
+          <div>
+            <p class="eyebrow">CONTENT MANAGER
+            </p>
+            <h2 id="dialog-title">Create content
+            </h2>
+          </div><button type="button" class="dialog-close" data-close aria-label="Close">×</button>
+        </div>
+        <input type="hidden" name="id" /><label>Title
+        <input name="title" required maxlength="100" placeholder="Enter a clear title" /></label>
+        <div class="form-row"><label>Content type<select name="type">
+          <option>News
+          </option>
+          <option>Research
+          </option>
+          <option>Event
+          </option>
+          <option>Page
+          </option></select></label><label>Status<select name="status">
+          <option>Draft
+          </option>
+          <option>Published
+          </option></select></label>
+        </div><label>Summary<textarea name="summary" rows="4" maxlength="240" placeholder="A short description for your readers"></textarea></label>
+        <div class="dialog-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save content</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog class="dialog" id="event-dialog">
+      <form id="event-form" method="dialog">
+        <div class="dialog-top">
+          <div>
+            <p class="eyebrow">EVENTS
+            </p>
+            <h2>Add an event
+            </h2>
+          </div><button type="button" class="dialog-close" data-close aria-label="Close">×</button>
+        </div><label>Event name
+        <input name="title" required maxlength="90" placeholder="e.g. Research methods workshop" /></label>
+        <div class="form-row"><label>Date
+          <input name="date" type="date" required /></label><label>Category
+          <input name="category" maxlength="30" placeholder="Workshop" /></label>
+        </div>
+        <div class="dialog-actions"><button type="button" class="secondary-button" data-close>Cancel</button><button type="submit" class="primary-button">Save event</button>
+        </div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite">
+    </div><script src="admin.js"></script>
+  </body>
 </html>
