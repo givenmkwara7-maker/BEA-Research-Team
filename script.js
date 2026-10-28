@@ -92,11 +92,28 @@ if (lightbox) {
 
 const contactForm = document.querySelector("#contact-form");
 if (contactForm) {
-  contactForm.addEventListener("submit", (event) => {
+  contactForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const message = contactForm.querySelector(".form-message");
-    message.textContent =
-      "Thank you — your enquiry is ready to be sent to the BEA Research Team.";
-    contactForm.reset();
+    const submitButton = contactForm.querySelector('button[type="submit"]');
+    const data = Object.fromEntries(new FormData(contactForm).entries());
+    submitButton.disabled = true;
+    message.textContent = "Sending your enquiry…";
+    try {
+      const response = await fetch("/api/inquiries", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Your enquiry could not be sent.");
+      message.textContent = "Thank you — your enquiry has been received by the BEA Research Team.";
+      contactForm.reset();
+    } catch (error) {
+      message.textContent = error.message || "We could not send your enquiry. Please try again.";
+    } finally {
+      submitButton.disabled = false;
+    }
   });
 }

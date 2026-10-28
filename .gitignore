@@ -1,0 +1,4 @@
+.env
+inquiries.json
+inquiries.json.*.tmp
+site-content.json.*.tmp

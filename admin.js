@@ -39,8 +39,12 @@ const itemForm = document.querySelector("#item-form");
 const toast = document.querySelector("#toast");
 const itemImagePreview = document.querySelector("#item-image-preview");
 const backgroundsForm = document.querySelector("#backgrounds-form");
+const inquiryList = document.querySelector("#inquiry-list");
+const inquiryDialog = document.querySelector("#inquiry-dialog");
+const inquiryReplyForm = document.querySelector("#inquiry-reply-form");
 const savedIndicator = document.querySelector("#saved-indicator");
 let siteData;
+let inquiries = [];
 let toastTimer;
 let activeCollection;
 let uploadedLogoData = "";
@@ -257,6 +261,79 @@ function renderTrash() {
   }
 }
 
+function renderInquiries() {
+  inquiryList.replaceChildren();
+  if (!inquiries.length) {
+    inquiryList.innerHTML = '<p class="empty-list">No inquiries yet. Messages sent through the public form will appear here.</p>';
+    return;
+  }
+
+  for (const inquiry of inquiries) {
+    const card = document.createElement("article");
+    card.className = "inquiry-card";
+
+    const header = document.createElement("div");
+    header.className = "inquiry-card-header";
+    const identity = document.createElement("div");
+    const subject = document.createElement("h3");
+    subject.textContent = inquiry.subject;
+    const sender = document.createElement("a");
+    sender.className = "inquiry-sender";
+    sender.href = `mailto:${inquiry.email}`;
+    sender.textContent = `${inquiry.name} · ${inquiry.email}`;
+    identity.append(subject, sender);
+    const status = document.createElement("span");
+    status.className = `inquiry-status ${inquiry.status === "replied" ? "replied" : "new"}`;
+    status.textContent = inquiry.status === "replied" ? "Replied" : "New";
+    header.append(identity, status);
+
+    const message = document.createElement("p");
+    message.className = "inquiry-message";
+    message.textContent = inquiry.message;
+    const actions = document.createElement("div");
+    actions.className = "inquiry-actions";
+    const date = document.createElement("span");
+    date.className = "inquiry-date";
+    date.textContent = inquiry.submittedAt
+      ? new Date(inquiry.submittedAt).toLocaleString()
+      : "Date unavailable";
+    const reply = document.createElement("button");
+    reply.type = "button";
+    reply.className = "primary-button";
+    reply.dataset.inquiryReply = inquiry.id;
+    reply.textContent = inquiry.status === "replied" ? "Reply again" : "Reply";
+    actions.append(date, reply);
+    card.append(header, message, actions);
+
+    for (const sentReply of inquiry.replies || []) {
+      const history = document.createElement("p");
+      history.className = "inquiry-reply-history";
+      history.textContent = `Your reply · ${new Date(sentReply.sentAt).toLocaleString()}\n${sentReply.message}`;
+      card.append(history);
+    }
+    inquiryList.append(card);
+  }
+}
+
+async function refreshInquiries(showConfirmation = false) {
+  const result = await request("/api/admin/inquiries");
+  inquiries = result.inquiries;
+  renderInquiries();
+  if (showConfirmation) showToast("Inquiries refreshed.");
+}
+
+function openInquiryReply(inquiry) {
+  inquiryReplyForm.elements.id.value = inquiry.id;
+  inquiryReplyForm.elements.subject.value = /^re:/i.test(inquiry.subject)
+    ? inquiry.subject
+    : `Re: ${inquiry.subject}`;
+  inquiryReplyForm.elements.message.value = "";
+  document.querySelector("#inquiry-reply-title").textContent = inquiry.subject;
+  document.querySelector("#inquiry-recipient").textContent = `To: ${inquiry.name} <${inquiry.email}>`;
+  document.querySelector("#inquiry-original").textContent = inquiry.message;
+  inquiryDialog.showModal();
+}
+
 async function saveSite(successMessage) {
   setSaveState("saving", "Saving changes…");
   try {
@@ -355,6 +432,7 @@ async function initialise() {
     siteData.trash ||= [];
     siteData.pageBackgrounds ||= {};
     renderAll();
+    await refreshInquiries();
   } catch (error) {
     showToast(error.message, true);
   }
@@ -416,6 +494,48 @@ document.querySelectorAll("[data-background-clear]").forEach((button) => {
     backgroundsForm.querySelector(`[data-background-file="${page}"]`).value = "";
     updateBackgroundPreview(page, "");
   });
+});
+
+document.querySelector("#refresh-inquiries").addEventListener("click", async () => {
+  try {
+    await refreshInquiries(true);
+  } catch (error) {
+    showToast(error.message, true);
+  }
+});
+
+inquiryList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-inquiry-reply]");
+  if (!button) return;
+  const inquiry = inquiries.find((item) => item.id === button.dataset.inquiryReply);
+  if (inquiry) openInquiryReply(inquiry);
+});
+
+inquiryReplyForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const submitButton = inquiryReplyForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  submitButton.textContent = "Sending…";
+  try {
+    const id = inquiryReplyForm.elements.id.value;
+    const result = await request(`/api/admin/inquiries/${encodeURIComponent(id)}/reply`, {
+      method: "POST",
+      body: JSON.stringify({
+        subject: inquiryReplyForm.elements.subject.value,
+        message: inquiryReplyForm.elements.message.value,
+      }),
+    });
+    const index = inquiries.findIndex((item) => item.id === result.inquiry.id);
+    if (index >= 0) inquiries[index] = result.inquiry;
+    renderInquiries();
+    inquiryDialog.close();
+    showToast("Reply sent through Brevo.");
+  } catch (error) {
+    showToast(error.message, true);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "Send reply";
+  }
 });
 
 profileForm.addEventListener("submit", async (event) => {

@@ -18,6 +18,19 @@ The admin panel needs the Node server. Do not open the HTML files directly or us
 
 The server stores public content in `site-content.json`. The admin sign-in uses an HTTP-only session cookie, server-side password hashing, same-origin checks, and a temporary lock after repeated failed sign-in attempts. Sessions last up to eight hours. The password is not saved in the project files.
 
+## Contact inquiries and Brevo replies
+
+Public contact form submissions are saved privately in `inquiries.json` and appear in Admin → Inquiries. This private file is excluded from Git. To email replies to the person who submitted the inquiry, create a Brevo API key and verify the sender email in Brevo. Before starting `node server.js`, add these settings in the same PowerShell window:
+
+```powershell
+$secureBrevoKey = Read-Host "Brevo API key" -AsSecureString
+$env:BREVO_API_KEY = [System.Net.NetworkCredential]::new("", $secureBrevoKey).Password
+$env:BREVO_SENDER_EMAIL = Read-Host "Verified Brevo sender email"
+$env:BREVO_SENDER_NAME = "BEA Research Team"
+```
+
+Keep the API key in the server environment only. For a public host, set `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and `BREVO_SENDER_NAME` in its secret environment settings. The sender must be verified in Brevo. Replies use Brevo’s transactional email API.
+
 ## Admin capabilities
 
 - Edit the association identity, homepage heading and introduction, About section, contact email, and logo.
@@ -29,4 +42,4 @@ The server stores public content in `site-content.json`. The admin sign-in uses 
 
 ## Hosting
 
-The project now needs a Node.js host to provide authenticated editing and persistent API storage. A static-only host cannot run the admin login or save edited content. For a public deployment, use HTTPS, set `NODE_ENV=production`, set `ADMIN_USERNAME` and `ADMIN_PASSWORD` in the hosting provider’s secret environment settings, keep `site-content.json` on persistent storage, and back it up.
+The project now needs a Node.js host to provide authenticated editing and persistent API storage. A static-only host cannot run the admin login or save edited content. For a public deployment, use HTTPS, set `NODE_ENV=production`, set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and `BREVO_SENDER_NAME` in the hosting provider’s secret environment settings, keep `site-content.json` and private `inquiries.json` on persistent storage, and back them up.

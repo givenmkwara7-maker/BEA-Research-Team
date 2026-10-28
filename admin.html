@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="admin.css?v=page-backgrounds-1" />
+    <link rel="stylesheet" href="admin.css?v=inquiries-1" />
   </head>
   <body>
     <aside class="sidebar" id="sidebar">
@@ -19,6 +19,7 @@
       <p class="side-label">MANAGE WEBSITE</p>
       <nav class="side-nav" aria-label="Website management">
         <a class="active" href="#overview"><span>▦</span> Overview</a>
+        <a href="#inquiries"><span>✉</span> Inquiries</a>
         <a href="#profile"><span>◉</span> Main profile</a>
         <a href="#page-backgrounds"><span>▧</span> Page backgrounds</a>
         <a href="#research"><span>⌕</span> Research</a>
@@ -130,6 +131,14 @@
           </form>
         </section>
 
+        <section class="panel manager-panel" id="inquiries">
+          <div class="panel-heading">
+            <div><p class="eyebrow">INBOX</p><h2>Inquiries</h2><p class="panel-description">Messages sent through the public contact form are saved here. Sending replies requires a Brevo API key and verified sender configured on the server.</p></div>
+            <button class="secondary-button" id="refresh-inquiries" type="button">Refresh</button>
+          </div>
+          <div class="inquiry-list" id="inquiry-list"><p class="empty-list">Loading inquiries…</p></div>
+        </section>
+
         <section class="panel manager-panel" id="research" data-collection="research">
           <div class="panel-heading"><div><p class="eyebrow">KNOWLEDGE HUB</p><h2>Research projects</h2><p class="panel-description">Shown on the home page and Research page.</p></div><button class="primary-button add-item" data-add="research" type="button">＋ Add research</button></div>
           <div class="managed-list" id="list-research"></div>
@@ -179,7 +188,18 @@
         <div class="dialog-actions"><button class="secondary-button" data-close type="button">Cancel</button><button class="primary-button" type="submit">Save item</button></div>
       </form>
     </dialog>
+    <dialog class="dialog inquiry-dialog" id="inquiry-dialog">
+      <form id="inquiry-reply-form" method="dialog">
+        <div class="dialog-top"><div><p class="eyebrow">REPLY BY EMAIL</p><h2 id="inquiry-reply-title">Reply to inquiry</h2></div><button class="dialog-close" data-close type="button" aria-label="Close">×</button></div>
+        <input type="hidden" name="id" />
+        <p class="inquiry-recipient" id="inquiry-recipient"></p>
+        <div class="inquiry-original" id="inquiry-original"></div>
+        <label>Subject<input name="subject" required maxlength="180" /></label>
+        <label>Your reply<textarea name="message" rows="7" maxlength="8000" required placeholder="Write your response…"></textarea></label>
+        <div class="dialog-actions"><button class="secondary-button" data-close type="button">Cancel</button><button class="primary-button" type="submit">Send reply</button></div>
+      </form>
+    </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="admin.js?v=page-backgrounds-1"></script>
+    <script src="admin.js?v=inquiries-1"></script>
   </body>
 </html>

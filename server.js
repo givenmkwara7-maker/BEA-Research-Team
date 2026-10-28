@@ -1,10 +1,12 @@
 const http = require("node:http");
+const https = require("node:https");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const crypto = require("node:crypto");
 
 const ROOT = __dirname;
 const DATA_FILE = path.join(ROOT, "site-content.json");
+const INQUIRIES_FILE = path.join(ROOT, "inquiries.json");
 const PORT = Number(process.env.PORT || 3000);
 const USERNAME = process.env.ADMIN_USERNAME;
 const PASSWORD = process.env.ADMIN_PASSWORD;
@@ -13,6 +15,7 @@ const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 const MAX_BODY_BYTES = 12_000_000;
 const sessions = new Map();
 const loginAttempts = new Map();
+const inquiryAttempts = new Map();
 const MIME_TYPES = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
@@ -103,12 +106,12 @@ function requireSession(request, response) {
   return true;
 }
 
-function readJson(request) {
+function readJson(request, maxBytes = MAX_BODY_BYTES) {
   return new Promise((resolve, reject) => {
     let body = "";
     request.on("data", (chunk) => {
       body += chunk;
-      if (Buffer.byteLength(body) > MAX_BODY_BYTES) {
+      if (Buffer.byteLength(body) > maxBytes) {
         reject(new Error("Request body is too large."));
         request.destroy();
       }
@@ -167,7 +170,216 @@ function validSiteData(data) {
   );
 }
 
+async function loadInquiries() {
+  try {
+    const inquiries = JSON.parse(await fs.readFile(INQUIRIES_FILE, "utf8"));
+    if (!Array.isArray(inquiries)) throw new Error("Inquiry data is invalid.");
+    return inquiries;
+  } catch (error) {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  }
+}
+
+async function saveInquiries(inquiries) {
+  const temporaryFile = `${INQUIRIES_FILE}.${crypto.randomBytes(8).toString("hex")}.tmp`;
+  await fs.writeFile(temporaryFile, `${JSON.stringify(inquiries, null, 2)}\n`, "utf8");
+  await fs.rename(temporaryFile, INQUIRIES_FILE);
+}
+
+function allowInquiryFrom(ip) {
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000;
+  const recentAttempts = (inquiryAttempts.get(ip) || []).filter(
+    (timestamp) => now - timestamp < windowMs,
+  );
+  if (recentAttempts.length >= 5) {
+    inquiryAttempts.set(ip, recentAttempts);
+    return false;
+  }
+  recentAttempts.push(now);
+  inquiryAttempts.set(ip, recentAttempts);
+  return true;
+}
+
+function sendBrevoEmail({ email, name, subject, message }) {
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL;
+  const senderName = process.env.BREVO_SENDER_NAME || "BEA Research Team";
+  if (!apiKey || !senderEmail) {
+    throw new Error("Brevo is not configured. Set BREVO_API_KEY and BREVO_SENDER_EMAIL in the server environment.");
+  }
+
+  const payload = JSON.stringify({
+    sender: { name: senderName, email: senderEmail },
+    to: [{ email, name }],
+    subject,
+    textContent: message,
+  });
+
+  return new Promise((resolve, reject) => {
+    const request = https.request(
+      {
+        hostname: "api.brevo.com",
+        path: "/v3/smtp/email",
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "api-key": apiKey,
+          "content-type": "application/json",
+          "content-length": Buffer.byteLength(payload),
+        },
+      },
+      (response) => {
+        let responseBody = "";
+        response.setEncoding("utf8");
+        response.on("data", (chunk) => {
+          if (responseBody.length < 4000) responseBody += chunk;
+        });
+        response.on("end", () => {
+          if (response.statusCode < 200 || response.statusCode >= 300) {
+            reject(new Error(`Brevo returned HTTP ${response.statusCode}. Check the API key and verified sender.`));
+            return;
+          }
+          try {
+            resolve(JSON.parse(responseBody));
+          } catch {
+            resolve({});
+          }
+        });
+      },
+    );
+    request.setTimeout(15000, () => request.destroy(new Error("Brevo request timed out.")));
+    request.on("error", reject);
+    request.end(payload);
+  });
+}
+
 async function handleApi(request, response, url) {
+  if (url.pathname === "/api/inquiries" && request.method === "POST") {
+    if (!hasSameOrigin(request)) {
+      sendJson(response, 403, { error: "Request origin was rejected." });
+      return;
+    }
+    if (!allowInquiryFrom(request.socket.remoteAddress || "unknown")) {
+      sendJson(response, 429, { error: "Please wait before sending another enquiry." });
+      return;
+    }
+
+    let submission;
+    try {
+      submission = await readJson(request, 12_000);
+    } catch (error) {
+      sendJson(response, 400, { error: error.message });
+      return;
+    }
+    if (typeof submission.website === "string" && submission.website.trim()) {
+      sendJson(response, 201, { received: true });
+      return;
+    }
+
+    const name = typeof submission.name === "string" ? submission.name.trim() : "";
+    const email = typeof submission.email === "string" ? submission.email.trim() : "";
+    const subject = typeof submission.subject === "string" ? submission.subject.trim() : "";
+    const message = typeof submission.message === "string" ? submission.message.trim() : "";
+    if (
+      !name || name.length > 120 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 ||
+      !subject || subject.length > 180 ||
+      !message || message.length > 5000
+    ) {
+      sendJson(response, 400, { error: "Please check your name, email address, subject, and message." });
+      return;
+    }
+
+    const inquiry = {
+      id: crypto.randomUUID(),
+      name,
+      email,
+      subject,
+      message,
+      submittedAt: new Date().toISOString(),
+      status: "new",
+      replies: [],
+    };
+    try {
+      const inquiries = await loadInquiries();
+      inquiries.unshift(inquiry);
+      await saveInquiries(inquiries);
+      sendJson(response, 201, { received: true });
+    } catch {
+      sendJson(response, 500, { error: "We could not save your enquiry. Please try again later." });
+    }
+    return;
+  }
+
+  if (url.pathname === "/api/admin/inquiries" && request.method === "GET") {
+    if (!requireSession(request, response)) return;
+    try {
+      const inquiries = await loadInquiries();
+      inquiries.sort((first, second) => second.submittedAt.localeCompare(first.submittedAt));
+      sendJson(response, 200, { inquiries });
+    } catch {
+      sendJson(response, 500, { error: "Inquiries could not be loaded." });
+    }
+    return;
+  }
+
+  const inquiryReplyRoute = url.pathname.match(/^\/api\/admin\/inquiries\/([^/]+)\/reply$/);
+  if (inquiryReplyRoute && request.method === "POST") {
+    if (!hasSameOrigin(request)) {
+      sendJson(response, 403, { error: "Request origin was rejected." });
+      return;
+    }
+    if (!requireSession(request, response)) return;
+    let replyData;
+    try {
+      replyData = await readJson(request, 16_000);
+    } catch (error) {
+      sendJson(response, 400, { error: error.message });
+      return;
+    }
+    const subject = typeof replyData.subject === "string" ? replyData.subject.trim() : "";
+    const message = typeof replyData.message === "string" ? replyData.message.trim() : "";
+    if (!subject || subject.length > 180 || !message || message.length > 8000) {
+      sendJson(response, 400, { error: "Enter a subject and a reply of up to 8,000 characters." });
+      return;
+    }
+
+    try {
+      const inquiries = await loadInquiries();
+      const inquiry = inquiries.find((item) => item.id === inquiryReplyRoute[1]);
+      if (!inquiry) {
+        sendJson(response, 404, { error: "This inquiry could not be found." });
+        return;
+      }
+      const sent = await sendBrevoEmail({
+        email: inquiry.email,
+        name: inquiry.name,
+        subject,
+        message,
+      });
+      const reply = {
+        id: crypto.randomUUID(),
+        subject,
+        message,
+        sentAt: new Date().toISOString(),
+        brevoMessageId: sent.messageId || "",
+      };
+      inquiry.replies ||= [];
+      inquiry.replies.push(reply);
+      inquiry.status = "replied";
+      await saveInquiries(inquiries);
+      sendJson(response, 200, { inquiry });
+    } catch (error) {
+      const needsConfiguration = error.message.includes("not configured");
+      sendJson(response, needsConfiguration ? 503 : 502, {
+        error: error.message || "The reply could not be sent through Brevo.",
+      });
+    }
+    return;
+  }
+
   if (url.pathname === "/api/session" && request.method === "GET") {
     sendJson(response, 200, { authenticated: Boolean(getSession(request)) });
     return;
