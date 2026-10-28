@@ -74,8 +74,33 @@
 
 .team-grid article {
   border: 1px solid #d9ded4;
-  padding: 25px;
-  min-height: 220px;
+  padding: 14px 14px 25px;
+  min-height: 300px;
+}
+
+.team-member-photo {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 18px;
+  place-items: center;
+  overflow: hidden;
+  background: #edf1ea;
+}
+
+.team-member-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.team-member-photo-empty {
+  color: #6f8075;
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 
 .team-grid span {

@@ -1,4 +1,5 @@
 const contentCollections = ["research", "events", "news", "team", "gallery"];
+const detailItems = new Map();
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -32,6 +33,89 @@ function formatEventDate(dateValue) {
   };
 }
 
+function registerDetailCard(card, type, item) {
+  if (!item.id) return;
+  card.dataset.detailType = type;
+  card.dataset.detailId = item.id;
+  card.tabIndex = 0;
+  card.setAttribute("aria-label", `Open full details for ${item.title}`);
+  detailItems.set(`${type}:${item.id}`, item);
+}
+
+function openItemDetails(type, item) {
+  let dialog = document.querySelector("#content-detail-dialog");
+  if (!dialog) {
+    dialog = element("dialog", "content-detail-dialog");
+    dialog.id = "content-detail-dialog";
+    document.body.append(dialog);
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+  }
+
+  const header = element("div", "content-detail-header");
+  const intro = element("div");
+  intro.append(element("p", "eyebrow", type));
+  intro.append(element("h2", "", item.title));
+  const close = element("button", "content-detail-close", "×");
+  close.type = "button";
+  close.setAttribute("aria-label", "Close details");
+  close.addEventListener("click", () => dialog.close());
+  header.append(intro, close);
+
+  const metadata = [item.category, item.status, item.year];
+  if (item.date) {
+    metadata.push(new Date(`${item.date}T12:00:00`).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }));
+  }
+  const meta = element("p", "content-detail-meta", metadata.filter(Boolean).join(" · "));
+  const body = element("div", "content-detail-body");
+  if (item.image) {
+    const image = element("img", "content-detail-image");
+    image.src = item.image;
+    image.alt = item.title;
+    body.append(image);
+  }
+  if (item.summary) {
+    body.append(element("h3", "", "Overview"));
+    body.append(element("p", "content-detail-copy", item.summary));
+  }
+  if (item.details) {
+    body.append(element("h3", "", type === "news" ? "Full story" : "Full report"));
+    body.append(element("p", "content-detail-copy", item.details));
+  } else {
+    body.append(element("p", "content-detail-note", "More detailed information has not been added yet."));
+  }
+  const contact = element("a", "button content-detail-contact", "Ask us about this →");
+  contact.href = "index.html#contact";
+  dialog.replaceChildren(header, meta, body, contact);
+  dialog.showModal();
+}
+
+document.addEventListener("click", (event) => {
+  const explicitTrigger = event.target.closest("[data-open-details]");
+  const card = event.target.closest("[data-detail-type]");
+  if (explicitTrigger && card) {
+    event.preventDefault();
+    openItemDetails(card.dataset.detailType, detailItems.get(`${card.dataset.detailType}:${card.dataset.detailId}`));
+    return;
+  }
+  if (!card || event.target.closest("a, button")) return;
+  const item = detailItems.get(`${card.dataset.detailType}:${card.dataset.detailId}`);
+  if (item) openItemDetails(card.dataset.detailType, item);
+});
+
+document.addEventListener("keydown", (event) => {
+  const card = event.target.closest("[data-detail-type]");
+  if (!card || event.target !== card || !["Enter", " "].includes(event.key)) return;
+  event.preventDefault();
+  const item = detailItems.get(`${card.dataset.detailType}:${card.dataset.detailId}`);
+  if (item) openItemDetails(card.dataset.detailType, item);
+});
+
 function updateProfile(profile) {
   const heroBackdrop = document.querySelector("#hero-backdrop");
   if (heroBackdrop && profile.heroImage) {
@@ -63,6 +147,7 @@ function renderResearch(research) {
     grid.replaceChildren();
     for (const item of research) {
       const card = element("article", "publication-card");
+      registerDetailCard(card, "research", item);
       const category = (item.category || "").toLowerCase();
       card.dataset.category = category.includes("agric")
         ? "agriculture"
@@ -82,6 +167,9 @@ function renderResearch(research) {
 
       const heading = element("h3", "", item.title);
       const summary = element("p", "", item.summary);
+      const readMore = element("button", "card-detail-link", "Read full details →");
+      readMore.type = "button";
+      readMore.dataset.openDetails = "";
       const footer = element("footer");
       footer.append(element("span", "", item.category));
       const more = element("a", "", "→");
@@ -89,7 +177,7 @@ function renderResearch(research) {
       more.setAttribute("aria-label", `Enquire about ${item.title}`);
       footer.append(more);
 
-      card.append(top, heading, summary, footer);
+      card.append(top, heading, summary, readMore, footer);
       grid.append(card);
     }
   });
@@ -98,6 +186,7 @@ function renderResearch(research) {
   const featured = research[0];
   if (spotlight) spotlight.hidden = !featured;
   if (spotlight && featured) {
+    registerDetailCard(spotlight, "research", featured);
     setText(".tag", featured.status || "Research project", spotlight);
     setText("h3", featured.title, spotlight);
     setText(".spotlight-content > p", featured.summary, spotlight);
@@ -113,6 +202,7 @@ function renderEvents(events) {
     for (const item of events) {
       const date = formatEventDate(item.date);
       const article = element("article");
+      registerDetailCard(article, "events", item);
       const time = element("time");
       time.dateTime = item.date;
       time.append(element("b", "", date.day));
@@ -125,8 +215,9 @@ function renderEvents(events) {
       description.append(element("h2", "", item.title));
       description.append(element("p", "", item.summary));
 
-      const details = element("a", "button button-small", "Details");
-      details.href = "index.html#contact";
+      const details = element("button", "button button-small", "Read full details");
+      details.type = "button";
+      details.dataset.openDetails = "";
       article.append(time, description, details);
       calendar.append(article);
     }
@@ -140,6 +231,7 @@ function renderEvents(events) {
     for (const item of upcoming.slice(0, 4)) {
       const date = formatEventDate(item.date);
       const row = element("article");
+      registerDetailCard(row, "events", item);
       const time = element("time");
       time.dateTime = item.date;
       time.append(element("b", "", date.day));
@@ -176,6 +268,7 @@ function createNewsCard(item, featured = false) {
     "article",
     featured ? "news-card featured-news" : "news-list-card",
   );
+  registerDetailCard(article, "news", item);
   if (featured && item.image) {
     const image = element("img");
     image.src = item.image;
@@ -189,10 +282,16 @@ function createNewsCard(item, featured = false) {
   body.append(element("p", "", item.summary));
 
   if (featured) {
-    const link = element("a", "text-link", "Read story →");
-    link.href = "index.html#contact";
+    const link = element("button", "text-link", "Read full story →");
+    link.type = "button";
+    link.dataset.openDetails = "";
     body.append(link);
     article.append(body);
+  } else {
+    const link = element("button", "text-link", "Read full story →");
+    link.type = "button";
+    link.dataset.openDetails = "";
+    body.append(link);
   }
   return article;
 }
@@ -224,6 +323,17 @@ function renderTeam(team) {
     teamGrid.replaceChildren();
     team.forEach((item, index) => {
       const role = element("article");
+      const photoBox = element("div", "team-member-photo");
+      if (item.image) {
+        const photo = element("img");
+        photo.src = item.image;
+        photo.alt = `${item.title} executive member`;
+        photo.loading = "lazy";
+        photoBox.append(photo);
+      } else {
+        photoBox.append(element("span", "team-member-photo-empty", "Executive photo"));
+      }
+      role.append(photoBox);
       role.append(element("span", "", String(index + 1).padStart(2, "0")));
       role.append(element("h2", "", item.title));
       role.append(element("p", "", item.summary));

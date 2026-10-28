@@ -1,19 +1,19 @@
 const COLLECTIONS = {
   research: {
     singular: "research project",
-    fields: ["category", "status", "summary", "year"],
+    fields: ["category", "status", "summary", "details", "year"],
   },
   events: {
     singular: "event",
-    fields: ["category", "date", "summary"],
+    fields: ["category", "date", "summary", "details"],
   },
   news: {
     singular: "news story",
-    fields: ["category", "date", "summary", "image"],
+    fields: ["category", "date", "summary", "details", "image"],
   },
   team: {
     singular: "team role",
-    fields: ["category", "summary"],
+    fields: ["category", "summary", "image"],
   },
   gallery: {
     singular: "gallery image",
@@ -27,6 +27,7 @@ const FIELD_LABELS = {
   date: "Date",
   year: "Year",
   summary: "Description",
+  details: "Full report / story details",
   image: "Image URL",
 };
 
@@ -34,6 +35,7 @@ const profileForm = document.querySelector("#profile-form");
 const itemDialog = document.querySelector("#item-dialog");
 const itemForm = document.querySelector("#item-form");
 const toast = document.querySelector("#toast");
+const itemImagePreview = document.querySelector("#item-image-preview");
 const savedIndicator = document.querySelector("#saved-indicator");
 let siteData;
 let toastTimer;
@@ -269,6 +271,7 @@ function openItemEditor(collection, item = null) {
   for (const field of Object.keys(FIELD_LABELS)) {
     itemForm.elements[field].value = item?.[field] || "";
   }
+  updateItemImagePreview(item?.image || "");
   const config = COLLECTIONS[collection];
   document.querySelector("#item-kicker").textContent = collection.toUpperCase();
   document.querySelector("#item-dialog-title").textContent = item
@@ -276,6 +279,45 @@ function openItemEditor(collection, item = null) {
     : `Add ${config.singular}`;
   itemDialog.showModal();
 }
+
+function updateItemImagePreview(source) {
+  itemImagePreview.hidden = !source;
+  if (source) itemImagePreview.src = source;
+  else itemImagePreview.removeAttribute("src");
+}
+
+itemForm.elements.image.addEventListener("input", () => {
+  itemForm.elements.imageFile.value = "";
+  updateItemImagePreview(itemForm.elements.image.value.trim());
+});
+
+itemForm.elements.imageFile.addEventListener("change", async (event) => {
+  const file = event.currentTarget.files[0];
+  if (!file) return;
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    showToast("Choose a JPG, PNG, or WebP photo.", true);
+    event.currentTarget.value = "";
+    return;
+  }
+  if (file.size > 700_000) {
+    showToast("Please choose a photo smaller than 700 KB.", true);
+    event.currentTarget.value = "";
+    return;
+  }
+  try {
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("This photo could not be read."));
+      reader.readAsDataURL(file);
+    });
+    itemForm.elements.image.value = dataUrl;
+    updateItemImagePreview(dataUrl);
+  } catch (error) {
+    showToast(error.message, true);
+    event.currentTarget.value = "";
+  }
+});
 
 async function initialise() {
   try {

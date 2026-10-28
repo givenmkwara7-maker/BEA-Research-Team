@@ -462,6 +462,29 @@ a {
   line-height: 1.5;
 }
 
+.upload-hint {
+  display: block;
+  margin-top: 12px;
+  color: #829087;
+  font-size: 0.63rem;
+  font-weight: 400;
+}
+
+.item-image-preview {
+  display: block;
+  width: min(220px, 100%);
+  max-height: 160px;
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #edf1ea;
+  object-fit: cover;
+}
+
+.item-image-preview[hidden] {
+  display: none;
+}
+
 .profile-form .wide-field {
   grid-column: 1 / -1;
 }
