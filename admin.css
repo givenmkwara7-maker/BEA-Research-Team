@@ -572,6 +572,14 @@ a {
   color: #a74436;
 }
 
+#list-trash .managed-item {
+  border-top-color: #f0e8e5;
+}
+
+#list-trash .delete-item {
+  min-width: 82px;
+}
+
 .empty-list {
   padding: 18px 0 6px;
   color: #929b94;

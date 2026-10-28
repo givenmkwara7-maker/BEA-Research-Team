@@ -134,8 +134,23 @@ function validSiteData(data) {
   if (!data || typeof data !== "object" || !data.profile) return false;
   if (typeof data.profile !== "object") return false;
   if (!data.profile.name || !data.profile.shortName || !data.profile.logo) return false;
-  return collections.every(
+  const validCollections = collections.every(
     (name) => Array.isArray(data[name]) && data[name].length <= 200,
+  );
+  if (!validCollections) return false;
+  if (data.trash === undefined) return true;
+  return (
+    Array.isArray(data.trash) &&
+    data.trash.length <= 500 &&
+    data.trash.every(
+      (entry) =>
+        entry &&
+        typeof entry.trashId === "string" &&
+        collections.includes(entry.collection) &&
+        entry.item &&
+        typeof entry.item.id === "string" &&
+        typeof entry.item.title === "string",
+    )
   );
 }
 
@@ -217,6 +232,7 @@ async function handleApi(request, response, url) {
   if (url.pathname === "/api/site" && request.method === "GET") {
     try {
       const site = JSON.parse(await fs.readFile(DATA_FILE, "utf8"));
+      delete site.trash;
       sendJson(response, 200, site);
     } catch {
       sendJson(response, 500, { error: "Site content could not be loaded." });
@@ -228,6 +244,7 @@ async function handleApi(request, response, url) {
     if (!requireSession(request, response)) return;
     try {
       const site = JSON.parse(await fs.readFile(DATA_FILE, "utf8"));
+      site.trash ||= [];
       sendJson(response, 200, site);
     } catch {
       sendJson(response, 500, { error: "Site content could not be loaded." });
@@ -297,7 +314,8 @@ async function serveFile(request, response, url) {
   try {
     const body = await fs.readFile(filename);
     response.writeHead(200, {
-      "Cache-Control": filename.endsWith(".html") ? "no-cache" : "public, max-age=300",
+      "Cache-Control":
+        /\.(html|css|js)$/i.test(filename) ? "no-cache" : "public, max-age=300",
       "Content-Type": MIME_TYPES[path.extname(filename).toLowerCase()] || "application/octet-stream",
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "DENY",

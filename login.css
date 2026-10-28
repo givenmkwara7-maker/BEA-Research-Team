@@ -46,16 +46,18 @@ body {
 
 .art-copy {
   max-width: 590px;
+  margin-inline: auto;
+  text-align: center;
 }
 
 .art-copy img {
   display: block;
-  width: 84px;
-  height: 84px;
+  width: 104px;
+  height: 104px;
   object-fit: contain;
   background: #fff;
   border-radius: 50%;
-  margin-bottom: 33px;
+  margin: 0 auto 33px;
 }
 
 .eyebrow {
@@ -82,6 +84,7 @@ body {
 
 .art-copy > p:last-child {
   max-width: 430px;
+  margin-inline: auto;
   color: #d4e1d8;
   line-height: 1.8;
 }
@@ -89,7 +92,9 @@ body {
 .art-campus {
   position: absolute;
   bottom: 32px;
-  left: clamp(35px, 8vw, 125px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
   color: #c2d2c8;
   font-size: 0.64rem;
   letter-spacing: 0.14em;
@@ -212,14 +217,13 @@ body {
     padding: 70px 27px 35px;
   }
 
-  .back-link,
-  .art-campus {
+  .back-link {
     left: 27px;
   }
 
   .art-copy img {
-    width: 58px;
-    height: 58px;
+    width: 78px;
+    height: 78px;
     margin-bottom: 20px;
   }
 

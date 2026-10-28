@@ -103,8 +103,8 @@ function populateProfile() {
 
 function renderCount() {
   for (const collection of Object.keys(COLLECTIONS)) {
-    document.querySelector(`#count-${collection}`).textContent =
-      siteData[collection].length;
+    const count = document.querySelector(`#count-${collection}`);
+    if (count) count.textContent = siteData[collection].length;
   }
 }
 
@@ -167,10 +167,66 @@ function renderCollection(collection) {
 }
 
 function renderAll() {
+  siteData.trash ||= [];
   populateProfile();
   renderCount();
   for (const collection of Object.keys(COLLECTIONS)) {
     renderCollection(collection);
+  }
+  renderTrash();
+}
+
+function renderTrash() {
+  const target = document.querySelector("#list-trash");
+  const entries = siteData.trash || [];
+  target.replaceChildren();
+
+  if (!entries.length) {
+    target.innerHTML = '<p class="empty-list">Trash is empty. Deleted items will appear here so you can restore them.</p>';
+    return;
+  }
+
+  for (const entry of [...entries].reverse()) {
+    const row = document.createElement("article");
+    row.className = "managed-item";
+
+    const main = document.createElement("div");
+    main.className = "managed-item-main";
+    if (entry.item.image) {
+      const image = document.createElement("img");
+      image.className = "managed-thumb";
+      image.src = entry.item.image;
+      image.alt = "";
+      image.loading = "lazy";
+      main.append(image);
+    }
+
+    const copy = document.createElement("div");
+    copy.className = "managed-item-copy";
+    const title = document.createElement("strong");
+    title.textContent = entry.item.title;
+    const detail = document.createElement("small");
+    const deleted = entry.deletedAt ? new Date(entry.deletedAt).toLocaleString() : "Date unavailable";
+    detail.textContent = `${COLLECTIONS[entry.collection]?.singular || entry.collection} · Deleted ${deleted}`;
+    copy.append(title, detail);
+    main.append(copy);
+
+    const actions = document.createElement("div");
+    actions.className = "item-actions";
+    const restore = document.createElement("button");
+    restore.type = "button";
+    restore.dataset.action = "restore";
+    restore.dataset.trashId = entry.trashId;
+    restore.textContent = "Restore";
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "delete-item";
+    remove.dataset.action = "permanent-delete";
+    remove.dataset.trashId = entry.trashId;
+    remove.textContent = "Delete forever";
+    actions.append(restore, remove);
+    row.append(main, actions);
+    target.append(row);
   }
 }
 
@@ -229,10 +285,10 @@ async function initialise() {
       return;
     }
     siteData = await request("/api/admin/site");
+    siteData.trash ||= [];
     renderAll();
   } catch (error) {
     showToast(error.message, true);
-    setTimeout(() => location.replace("admin-login.html?server=required"), 1200);
   }
 }
 
@@ -294,12 +350,46 @@ document.querySelectorAll(".managed-list").forEach((list) => {
       return;
     }
 
-    if (!confirm(`Delete “${item.title}” from the public website?`)) return;
+    if (!confirm(`Move “${item.title}” to Trash? You can restore it later.`)) return;
+    siteData.trash ||= [];
+    siteData.trash.push({
+      trashId: crypto.randomUUID(),
+      collection,
+      deletedAt: new Date().toISOString(),
+      item,
+    });
     siteData[collection] = siteData[collection].filter((entry) => entry.id !== id);
     renderCollection(collection);
     renderCount();
-    await saveSite("Item removed from the public website.");
+    renderTrash();
+    await saveSite("Item moved to Trash. You can restore it at any time.");
   });
+});
+
+document.querySelector("#list-trash").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+  const entry = siteData.trash.find((item) => item.trashId === button.dataset.trashId);
+  if (!entry) return;
+
+  if (button.dataset.action === "restore") {
+    const restored = { ...entry.item };
+    if (siteData[entry.collection].some((item) => item.id === restored.id)) {
+      restored.id = `${entry.collection}-${crypto.randomUUID()}`;
+    }
+    siteData[entry.collection].unshift(restored);
+    siteData.trash = siteData.trash.filter((item) => item.trashId !== entry.trashId);
+    renderCollection(entry.collection);
+    renderCount();
+    renderTrash();
+    await saveSite("Item restored to the public website.");
+    return;
+  }
+
+  if (!confirm(`Permanently delete “${entry.item.title}”? This cannot be undone.`)) return;
+  siteData.trash = siteData.trash.filter((item) => item.trashId !== entry.trashId);
+  renderTrash();
+  await saveSite("Item permanently deleted.");
 });
 
 itemForm.addEventListener("submit", async (event) => {

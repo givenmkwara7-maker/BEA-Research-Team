@@ -22,6 +22,7 @@ The server stores public content in `site-content.json`. The admin sign-in uses 
 
 - Edit the association identity, homepage heading and introduction, About section, contact email, and logo.
 - Add, edit, and remove research projects, events, news stories, team roles, and gallery images.
+- Deleted content moves to the admin Trash, where it can be restored or permanently deleted.
 - Changes are written to `site-content.json` and appear on the public site served by `server.js`.
 
 ## Hosting
