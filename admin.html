@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="admin.css?v=executive-photos-1" />
+    <link rel="stylesheet" href="admin.css?v=page-backgrounds-1" />
   </head>
   <body>
     <aside class="sidebar" id="sidebar">
@@ -20,6 +20,7 @@
       <nav class="side-nav" aria-label="Website management">
         <a class="active" href="#overview"><span>▦</span> Overview</a>
         <a href="#profile"><span>◉</span> Main profile</a>
+        <a href="#page-backgrounds"><span>▧</span> Page backgrounds</a>
         <a href="#research"><span>⌕</span> Research</a>
         <a href="#events"><span>◷</span> Events & activities</a>
         <a href="#news"><span>▤</span> News</a>
@@ -83,6 +84,52 @@
           </form>
         </section>
 
+        <section class="panel" id="page-backgrounds">
+          <div class="panel-heading">
+            <div><p class="eyebrow">PAGE DESIGN</p><h2>Page backgrounds</h2><p class="panel-description">Upload a photo for each website tab. Photos appear blurred behind the page heading, with a dark overlay to keep text readable. Use JPG, PNG, or WebP images under 700 KB.</p></div>
+          </div>
+          <form id="backgrounds-form">
+            <div class="background-editor-grid">
+              <article class="background-editor" data-background-editor="research">
+                <h3>Research</h3>
+                <div class="background-preview"><img alt="Research background preview" hidden /><span>No background photo selected</span></div>
+                <label>Photo URL<input type="url" data-background-url="research" placeholder="https://…" /></label>
+                <label>Upload photo<input type="file" data-background-file="research" accept="image/jpeg,image/png,image/webp" /></label>
+                <button class="secondary-button" type="button" data-background-clear="research">Remove photo</button>
+              </article>
+              <article class="background-editor" data-background-editor="events">
+                <h3>Programs & events</h3>
+                <div class="background-preview"><img alt="Programs and events background preview" hidden /><span>No background photo selected</span></div>
+                <label>Photo URL<input type="url" data-background-url="events" placeholder="https://…" /></label>
+                <label>Upload photo<input type="file" data-background-file="events" accept="image/jpeg,image/png,image/webp" /></label>
+                <button class="secondary-button" type="button" data-background-clear="events">Remove photo</button>
+              </article>
+              <article class="background-editor" data-background-editor="news">
+                <h3>News</h3>
+                <div class="background-preview"><img alt="News background preview" hidden /><span>No background photo selected</span></div>
+                <label>Photo URL<input type="url" data-background-url="news" placeholder="https://…" /></label>
+                <label>Upload photo<input type="file" data-background-file="news" accept="image/jpeg,image/png,image/webp" /></label>
+                <button class="secondary-button" type="button" data-background-clear="news">Remove photo</button>
+              </article>
+              <article class="background-editor" data-background-editor="team">
+                <h3>Team</h3>
+                <div class="background-preview"><img alt="Team background preview" hidden /><span>No background photo selected</span></div>
+                <label>Photo URL<input type="url" data-background-url="team" placeholder="https://…" /></label>
+                <label>Upload photo<input type="file" data-background-file="team" accept="image/jpeg,image/png,image/webp" /></label>
+                <button class="secondary-button" type="button" data-background-clear="team">Remove photo</button>
+              </article>
+              <article class="background-editor" data-background-editor="gallery">
+                <h3>Gallery</h3>
+                <div class="background-preview"><img alt="Gallery background preview" hidden /><span>No background photo selected</span></div>
+                <label>Photo URL<input type="url" data-background-url="gallery" placeholder="https://…" /></label>
+                <label>Upload photo<input type="file" data-background-file="gallery" accept="image/jpeg,image/png,image/webp" /></label>
+                <button class="secondary-button" type="button" data-background-clear="gallery">Remove photo</button>
+              </article>
+            </div>
+            <div class="profile-actions"><button class="primary-button" type="submit">Save page backgrounds</button><span>Photos appear on the public pages after saving.</span></div>
+          </form>
+        </section>
+
         <section class="panel manager-panel" id="research" data-collection="research">
           <div class="panel-heading"><div><p class="eyebrow">KNOWLEDGE HUB</p><h2>Research projects</h2><p class="panel-description">Shown on the home page and Research page.</p></div><button class="primary-button add-item" data-add="research" type="button">＋ Add research</button></div>
           <div class="managed-list" id="list-research"></div>
@@ -133,6 +180,6 @@
       </form>
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="admin.js?v=executive-photos-1"></script>
+    <script src="admin.js?v=page-backgrounds-1"></script>
   </body>
 </html>

@@ -1,7 +1,36 @@
 .page-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   background: #164e48;
   color: #fff;
   padding: 105px 0 95px;
+}
+
+.page-hero::before,
+.page-hero::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  pointer-events: none;
+}
+
+.page-hero::before {
+  inset: -14px;
+  background-image: var(--page-hero-image);
+  background-position: center;
+  background-size: cover;
+  filter: blur(9px);
+  transform: scale(1.04);
+}
+
+.page-hero::after {
+  background: linear-gradient(90deg, #164e48e8, #164e48bd);
+}
+
+.page-hero > .container {
+  position: relative;
 }
 
 .page-hero h1 {

@@ -23,6 +23,7 @@ The server stores public content in `site-content.json`. The admin sign-in uses 
 - Edit the association identity, homepage heading and introduction, About section, contact email, and logo.
 - Add, edit, and remove research projects, events, news stories, team roles, and gallery images.
 - Upload a JPG, PNG, or WebP photo for each team role; photos appear above the position on the Team page.
+- Set a separate blurred background photo for each interior tab: Research, Programs & Events, News, Team, and Gallery.
 - Deleted content moves to the admin Trash, where it can be restored or permanently deleted.
 - Changes are written to `site-content.json` and appear on the public site served by `server.js`.
 

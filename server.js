@@ -138,6 +138,19 @@ function validSiteData(data) {
     (name) => Array.isArray(data[name]) && data[name].length <= 200,
   );
   if (!validCollections) return false;
+  if (data.pageBackgrounds !== undefined) {
+    const backgroundPages = ["research", "events", "news", "team", "gallery"];
+    if (
+      !data.pageBackgrounds ||
+      typeof data.pageBackgrounds !== "object" ||
+      Array.isArray(data.pageBackgrounds) ||
+      Object.entries(data.pageBackgrounds).some(
+        ([page, image]) => !backgroundPages.includes(page) || typeof image !== "string" || image.length > 1_000_000,
+      )
+    ) {
+      return false;
+    }
+  }
   if (data.trash === undefined) return true;
   return (
     Array.isArray(data.trash) &&

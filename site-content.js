@@ -142,6 +142,14 @@ function updateProfile(profile) {
   document.title = `${profile.shortName} Research Team | ${profile.campus}`;
 }
 
+function applyPageBackground(site) {
+  const hero = document.querySelector(".page-hero");
+  if (!hero) return;
+  const page = location.pathname.split("/").pop().replace(/\.html$/i, "");
+  const image = site.pageBackgrounds?.[page];
+  if (image) hero.style.setProperty("--page-hero-image", `url(${JSON.stringify(image)})`);
+}
+
 function renderResearch(research) {
   document.querySelectorAll(".publication-grid").forEach((grid) => {
     grid.replaceChildren();
@@ -269,14 +277,15 @@ function createNewsCard(item, featured = false) {
     featured ? "news-card featured-news" : "news-list-card",
   );
   registerDetailCard(article, "news", item);
-  if (featured && item.image) {
+  if (item.image) {
     const image = element("img");
     image.src = item.image;
     image.alt = item.title;
+    image.loading = "lazy";
     article.append(image);
   }
 
-  const body = featured ? element("div") : article;
+  const body = element("div", "news-card-copy");
   body.append(element("span", featured ? "tag" : "tag muted", item.category));
   body.append(element("h3", "", item.title));
   body.append(element("p", "", item.summary));
@@ -286,13 +295,13 @@ function createNewsCard(item, featured = false) {
     link.type = "button";
     link.dataset.openDetails = "";
     body.append(link);
-    article.append(body);
   } else {
     const link = element("button", "text-link", "Read full story →");
     link.type = "button";
     link.dataset.openDetails = "";
     body.append(link);
   }
+  article.append(body);
   return article;
 }
 
@@ -375,6 +384,7 @@ async function loadPublicContent() {
     if (!site.profile || !contentCollections.every((name) => Array.isArray(site[name]))) return;
 
     updateProfile(site.profile);
+    applyPageBackground(site);
     renderResearch(site.research);
     renderEvents(site.events);
     renderNews(site.news);

@@ -31,11 +31,14 @@ const FIELD_LABELS = {
   image: "Image URL",
 };
 
+const BACKGROUND_PAGES = ["research", "events", "news", "team", "gallery"];
+
 const profileForm = document.querySelector("#profile-form");
 const itemDialog = document.querySelector("#item-dialog");
 const itemForm = document.querySelector("#item-form");
 const toast = document.querySelector("#toast");
 const itemImagePreview = document.querySelector("#item-image-preview");
+const backgroundsForm = document.querySelector("#backgrounds-form");
 const savedIndicator = document.querySelector("#saved-indicator");
 let siteData;
 let toastTimer;
@@ -100,6 +103,27 @@ function populateProfile() {
   for (const [name, value] of Object.entries(siteData.profile)) {
     const field = profileForm.elements.namedItem(name);
     if (field && field.type !== "file") field.value = value || "";
+  }
+}
+
+function updateBackgroundPreview(page, source) {
+  const editor = document.querySelector(`[data-background-editor="${page}"]`);
+  const preview = editor.querySelector(".background-preview");
+  const image = preview.querySelector("img");
+  const placeholder = preview.querySelector("span");
+  image.hidden = !source;
+  placeholder.hidden = Boolean(source);
+  if (source) image.src = source;
+  else image.removeAttribute("src");
+}
+
+function populateBackgrounds() {
+  siteData.pageBackgrounds ||= {};
+  for (const page of BACKGROUND_PAGES) {
+    const source = siteData.pageBackgrounds[page] || "";
+    const urlField = backgroundsForm.querySelector(`[data-background-url="${page}"]`);
+    urlField.value = source.startsWith("data:image/") ? "" : source;
+    updateBackgroundPreview(page, source);
   }
 }
 
@@ -171,6 +195,7 @@ function renderCollection(collection) {
 function renderAll() {
   siteData.trash ||= [];
   populateProfile();
+  populateBackgrounds();
   renderCount();
   for (const collection of Object.keys(COLLECTIONS)) {
     renderCollection(collection);
@@ -328,11 +353,70 @@ async function initialise() {
     }
     siteData = await request("/api/admin/site");
     siteData.trash ||= [];
+    siteData.pageBackgrounds ||= {};
     renderAll();
   } catch (error) {
     showToast(error.message, true);
   }
 }
+
+backgroundsForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await saveSite("Page backgrounds saved.");
+});
+
+document.querySelectorAll("[data-background-url]").forEach((input) => {
+  input.addEventListener("input", () => {
+    const page = input.dataset.backgroundUrl;
+    const source = input.value.trim();
+    siteData.pageBackgrounds[page] = source;
+    document.querySelector(`[data-background-file="${page}"]`).value = "";
+    updateBackgroundPreview(page, source);
+  });
+});
+
+document.querySelectorAll("[data-background-file]").forEach((input) => {
+  input.addEventListener("change", async () => {
+    const file = input.files[0];
+    if (!file) return;
+    const page = input.dataset.backgroundFile;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      showToast("Choose a JPG, PNG, or WebP background photo.", true);
+      input.value = "";
+      return;
+    }
+    if (file.size > 700_000) {
+      showToast("Please choose a background photo smaller than 700 KB.", true);
+      input.value = "";
+      return;
+    }
+    try {
+      const source = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("This background photo could not be read."));
+        reader.readAsDataURL(file);
+      });
+      siteData.pageBackgrounds[page] = source;
+      backgroundsForm.querySelector(`[data-background-url="${page}"]`).value = "";
+      updateBackgroundPreview(page, source);
+      showToast("Background photo loaded. Save page backgrounds to publish it.");
+    } catch (error) {
+      showToast(error.message, true);
+      input.value = "";
+    }
+  });
+});
+
+document.querySelectorAll("[data-background-clear]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const page = button.dataset.backgroundClear;
+    siteData.pageBackgrounds[page] = "";
+    backgroundsForm.querySelector(`[data-background-url="${page}"]`).value = "";
+    backgroundsForm.querySelector(`[data-background-file="${page}"]`).value = "";
+    updateBackgroundPreview(page, "");
+  });
+});
 
 profileForm.addEventListener("submit", async (event) => {
   event.preventDefault();
