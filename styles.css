@@ -575,22 +575,33 @@ button,input,textarea,select {
 }
 
 .publication-card footer {
+  position: relative;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  min-height: 48px;
   margin-top: auto;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
+  padding: 11px 38px;
+  border-top: 0;
+  border-radius: 4px;
+  background: #e8eee6;
+  text-align: center;
   font-size: .7rem;
   font-weight: bold;
-  color: var(--moss);
+  color: var(--green);
   text-transform: uppercase;
   letter-spacing: .06em;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .publication-card footer a {
+  position: absolute;
+  top: 50%;
+  right: 12px;
   font-size: 1.4rem;
   color: var(--ink);
+  transform: translateY(-50%);
 }
 
 .empty-state {
