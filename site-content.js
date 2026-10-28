@@ -150,6 +150,25 @@ function applyPageBackground(site) {
   if (image) hero.style.setProperty("--page-hero-image", `url(${JSON.stringify(image)})`);
 }
 
+function showLocalContentNotice() {
+  if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
+  if (location.port === "3000" || document.querySelector("#content-sync-notice")) return;
+
+  const notice = element("aside", "content-sync-notice");
+  notice.id = "content-sync-notice";
+  notice.setAttribute("role", "status");
+  notice.append(element("span", "", "This preview is not connected to saved Admin content."));
+  const openSite = element("a", "", "Open the BEA site on localhost:3000");
+  const page = location.pathname.split("/").pop() || "index.html";
+  openSite.href = `http://localhost:3000/${page}${location.search}${location.hash}`;
+  const close = element("button", "", "×");
+  close.type = "button";
+  close.setAttribute("aria-label", "Dismiss notice");
+  close.addEventListener("click", () => notice.remove());
+  notice.append(openSite, close);
+  document.body.append(notice);
+}
+
 function renderResearch(research) {
   document.querySelectorAll(".publication-grid").forEach((grid) => {
     grid.replaceChildren();
@@ -379,9 +398,15 @@ function renderGallery(gallery) {
 async function loadPublicContent() {
   try {
     const response = await fetch("/api/site", { cache: "no-store" });
-    if (!response.ok) return;
+    if (!response.ok) {
+      showLocalContentNotice();
+      return;
+    }
     const site = await response.json();
-    if (!site.profile || !contentCollections.every((name) => Array.isArray(site[name]))) return;
+    if (!site.profile || !contentCollections.every((name) => Array.isArray(site[name]))) {
+      showLocalContentNotice();
+      return;
+    }
 
     updateProfile(site.profile);
     applyPageBackground(site);
@@ -393,6 +418,7 @@ async function loadPublicContent() {
     document.dispatchEvent(new CustomEvent("bea:content-loaded"));
   } catch {
     // Keep the bundled page content visible if the API is unavailable.
+    showLocalContentNotice();
   }
 }
 

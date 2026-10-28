@@ -115,7 +115,7 @@ button,input,textarea,select {
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   line-height: 1;
 }
 
@@ -132,13 +132,13 @@ button,input,textarea,select {
 }
 
 .brand strong {
-  font-size: 1.05rem;
+  font-size: 1.17rem;
   letter-spacing: .12em;
 }
 
 .brand small {
   display: block;
-  font-size: .52rem;
+  font-size: .59rem;
   letter-spacing: .18em;
   margin-top: 5px;
 }
@@ -1087,6 +1087,39 @@ button,input,textarea,select {
   font-size: .86rem;
 }
 
+.content-sync-notice {
+  position: fixed;
+  z-index: 50;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  max-width: min(620px, calc(100vw - 32px));
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid #d8bd75;
+  border-radius: 6px;
+  background: #fffdf8;
+  color: var(--ink);
+  box-shadow: 0 8px 30px #11202e24;
+  font-size: .74rem;
+}
+
+.content-sync-notice a {
+  color: var(--green);
+  font-weight: 700;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.content-sync-notice button {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
 footer {
   background: var(--ink);
   color: #fff;
@@ -1300,12 +1333,27 @@ footer {
 }
 
 .brand-logo {
-  width: 48px;
-  height: 48px;
+  width: 62px;
+  height: 62px;
   object-fit: contain;
 }
 
 .footer-top .brand-logo {
   width: 56px;
   height: 56px;
+}
+
+@media(max-width:520px) {
+  .brand-logo {
+    width: 52px;
+    height: 52px;
+  }
+
+  .brand strong {
+    font-size: 1.05rem;
+  }
+
+  .brand small {
+    font-size: .54rem;
+  }
 }
