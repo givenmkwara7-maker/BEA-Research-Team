@@ -1,0 +1,288 @@
+.election-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.election-admin-card,
+.election-list-wrap {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.election-admin-card h3,
+.election-list-wrap h3 {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-family: "Playfair Display", serif;
+  font-size: 1.2rem;
+}
+
+.election-admin-card > p,
+.election-list-wrap > p {
+  color: #718078;
+  font-size: .8rem;
+  line-height: 1.6;
+}
+
+.election-admin-card code {
+  padding: 2px 4px;
+  border-radius: 3px;
+  background: #f1f4ef;
+  color: var(--green);
+  font-size: .74rem;
+}
+
+.election-admin-card form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.election-admin-card label {
+  display: grid;
+  gap: 6px;
+  color: #52635b;
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+.election-admin-card input,
+.election-admin-card textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: .78rem;
+}
+
+.election-admin-card textarea {
+  resize: vertical;
+}
+
+.election-admin-card input:focus,
+.election-admin-card textarea:focus {
+  outline: 2px solid #285e4e33;
+  border-color: var(--green);
+}
+
+.election-admin-card .primary-button,
+.election-admin-card .secondary-button {
+  justify-self: start;
+}
+
+.election-roster-count {
+  margin: 18px 0 9px;
+  color: var(--green) !important;
+  font-weight: 700;
+}
+
+.election-member-list,
+.election-admin-list {
+  display: grid;
+  gap: 9px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.election-member-row,
+.election-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.election-member-row strong,
+.election-member-row small,
+.election-card strong,
+.election-card small {
+  display: block;
+}
+
+.election-member-row strong,
+.election-card strong {
+  color: var(--ink);
+  font-size: .79rem;
+}
+
+.election-member-row small,
+.election-card small {
+  margin-top: 3px;
+  color: #78867e;
+  font-size: .7rem;
+  line-height: 1.5;
+}
+
+.election-member-row details { margin-top: 5px; }
+.election-member-row summary { color: var(--green); cursor: pointer; font-size: .68rem; }
+
+.election-member-row.inactive {
+  opacity: .58;
+}
+
+.election-row-actions,
+.election-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.election-row-actions button,
+.election-actions button {
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--green);
+  cursor: pointer;
+  font-size: .69rem;
+  font-weight: 600;
+}
+
+.election-positions-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 5px;
+  color: var(--ink);
+  font-size: .8rem;
+}
+
+.election-position-editor {
+  display: grid;
+  gap: 11px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fafbf8;
+}
+
+.election-create-form > label:first-child,
+.election-create-form > label:nth-child(4) {
+  grid-column: 1 / -1;
+}
+
+.election-create-form > label:nth-child(2),
+.election-create-form > label:nth-child(3) {
+  display: inline-grid;
+  grid-template-columns: 1fr;
+}
+
+.election-create-form > .election-positions-heading,
+.election-create-form > .election-position-list,
+.election-create-form > button[type="submit"] {
+  grid-column: 1 / -1;
+}
+
+.election-create-form > button[type="submit"] {
+  margin-top: 5px;
+}
+
+.election-position-list {
+  display: grid;
+  gap: 10px;
+}
+
+.election-position-editor .text-button {
+  justify-self: start;
+  padding: 3px 0;
+  border: 0;
+  background: none;
+  color: #a24938;
+  cursor: pointer;
+  font-size: .72rem;
+}
+
+.election-list-wrap {
+  margin-top: 18px;
+}
+
+.election-list-wrap h3 {
+  margin-bottom: 14px;
+}
+
+.election-card {
+  align-items: flex-start;
+}
+
+.election-card-main {
+  min-width: 0;
+}
+
+.election-status {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 7px;
+  border-radius: 20px;
+  background: #edf2e9;
+  color: #4c7656;
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.election-status.open { background: #e6f4e8; color: #2e7740; }
+.election-status.closed { background: #f0f0ed; color: #747c75; }
+.election-status.draft { background: #f8f0df; color: #8c6b2c; }
+
+.election-results {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+  color: #65746c;
+  font-size: .72rem;
+}
+
+.election-results p {
+  margin: 2px 0;
+  font-weight: 600;
+}
+
+.election-results .tie-warning,
+.election-results .quorum-warning {
+  color: #a85c2d;
+}
+
+.election-import-result {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid #e8dfc7;
+  border-radius: 5px;
+  background: #fffbef;
+  color: #66562d;
+  font-size: .75rem;
+  line-height: 1.55;
+}
+
+.election-import-result button {
+  margin-top: 8px;
+}
+
+@media (max-width: 1080px) {
+  .election-admin-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .election-admin-card,
+  .election-list-wrap { padding: 15px; }
+  .election-member-row,
+  .election-card { align-items: flex-start; flex-direction: column; }
+  .election-actions { width: 100%; }
+  .election-positions-heading { align-items: flex-start; flex-direction: column; }
+}

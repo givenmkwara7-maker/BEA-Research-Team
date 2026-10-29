@@ -48,6 +48,8 @@ let inquiries = [];
 let toastTimer;
 let activeCollection;
 let uploadedLogoData = "";
+let electionAdminData = { members: [], elections: [] };
+let pendingMemberCredentials = [];
 
 function showToast(message, isError = false) {
   toast.textContent = message;
@@ -434,6 +436,7 @@ async function initialise() {
     siteData.pageBackgrounds ||= {};
     renderAll();
     await refreshInquiries();
+    await refreshElectionAdmin();
   } catch (error) {
     showToast(error.message, true);
   }
@@ -495,6 +498,267 @@ document.querySelectorAll("[data-background-clear]").forEach((button) => {
     backgroundsForm.querySelector(`[data-background-file="${page}"]`).value = "";
     updateBackgroundPreview(page, "");
   });
+});
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let value = "";
+  let quoted = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    if (quoted) {
+      if (character === '"' && text[index + 1] === '"') {
+        value += '"';
+        index += 1;
+      } else if (character === '"') quoted = false;
+      else value += character;
+    } else if (character === '"') quoted = true;
+    else if (character === ",") {
+      row.push(value.trim());
+      value = "";
+    } else if (character === "\n" || character === "\r") {
+      if (character === "\r" && text[index + 1] === "\n") index += 1;
+      row.push(value.trim());
+      if (row.some(Boolean)) rows.push(row);
+      row = [];
+      value = "";
+    } else value += character;
+  }
+  row.push(value.trim());
+  if (row.some(Boolean)) rows.push(row);
+  if (quoted) throw new Error("The CSV has an unfinished quoted field.");
+  if (rows.length < 2) throw new Error("The CSV needs a heading row and at least one member.");
+  const rawHeaders = rows.shift().map((header) => header.replace(/^\uFEFF/, "").trim());
+  const headers = rawHeaders.map((header) => header.toLowerCase().replace(/[\s_-]+/g, ""));
+  const indexFor = (...names) => headers.findIndex((header) => names.includes(header));
+  const memberIndex = indexFor("memberid", "id", "membershipid", "membernumber");
+  const nameIndex = indexFor("name", "fullname", "membername");
+  if (memberIndex < 0 || nameIndex < 0) throw new Error("The CSV must include memberId and name columns.");
+  const optionalIndex = (...names) => indexFor(...names);
+  return rows.map((columns) => {
+    const knownHeaders = new Set([memberIndex, nameIndex,
+      optionalIndex("email", "emailaddress"), optionalIndex("phone", "phonenumber", "mobile"),
+      optionalIndex("programme", "program", "course"), optionalIndex("yearjoined", "joined", "year")]);
+    const details = {};
+    rawHeaders.forEach((header, index) => {
+      if (knownHeaders.has(index) || !header || /password|passcode|secret/i.test(header)) return;
+      const detail = (columns[index] || "").trim();
+      if (detail) details[header.slice(0, 50)] = detail.slice(0, 500);
+    });
+    return {
+      memberId: columns[memberIndex] || "",
+      name: columns[nameIndex] || "",
+      email: columns[optionalIndex("email", "emailaddress")] || "",
+      phone: columns[optionalIndex("phone", "phonenumber", "mobile")] || "",
+      programme: columns[optionalIndex("programme", "program", "course")] || "",
+      yearJoined: columns[optionalIndex("yearjoined", "joined", "year")] || "",
+      details,
+    };
+  }).filter((member) => member.memberId || member.name);
+}
+
+function downloadMemberCredentials(members) {
+  if (!members.length) return;
+  const headers = ["memberId", "name", "email", "temporaryPassword"];
+  const csv = [headers, ...members.map((member) => headers.map((header) => member[header] || ""))]
+    .map((row) => row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(","))
+    .join("\r\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = element("a");
+  link.href = url;
+  link.download = `bea-voter-temporary-passwords-${localDateString()}.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function offerMemberCredentials(members) {
+  pendingMemberCredentials = members;
+  document.querySelector("#member-credential-message").textContent = `${members.length} temporary password${members.length === 1 ? " was" : "s were"} generated. Download now and share privately; the passwords cannot be viewed again here.`;
+  document.querySelector("#member-credential-download").hidden = !members.length;
+}
+
+document.querySelector("#download-member-credentials").addEventListener("click", () => {
+  downloadMemberCredentials(pendingMemberCredentials);
+  pendingMemberCredentials = [];
+  document.querySelector("#member-credential-download").hidden = true;
+  showToast("Credential file downloaded. Store it securely and share it privately.");
+});
+
+document.querySelector("#download-roster-template").addEventListener("click", () => {
+  const url = URL.createObjectURL(new Blob(["memberId,name,email,phone,programme,yearJoined\r\n"], { type: "text/csv;charset=utf-8" }));
+  const link = element("a");
+  link.href = url;
+  link.download = "bea-member-roster-template.csv";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+});
+
+function renderElectionAdmin() {
+  const count = electionAdminData.members.filter((member) => member.active).length;
+  const countNode = document.querySelector("#election-roster-count");
+  countNode.textContent = `${count} active eligible member${count === 1 ? "" : "s"} (${electionAdminData.members.length} total on record).`;
+  const memberList = document.querySelector("#election-member-list");
+  const visibleMembers = [...electionAdminData.members].sort((a, b) => a.name.localeCompare(b.name));
+  memberList.innerHTML = visibleMembers.length ? visibleMembers.map((member) => `
+    <div class="election-member-row ${member.active ? "" : "inactive"}">
+      <div><strong>${escapeHtml(member.name)} · ${escapeHtml(member.memberId)}</strong><small>${escapeHtml([member.email, member.phone, member.programme, member.yearJoined && `Joined ${member.yearJoined}`, member.active ? "Eligible" : "Inactive"].filter(Boolean).join(" · "))}</small>${Object.keys(member.details || {}).length ? `<details><summary>Other member details</summary><small>${Object.entries(member.details).map(([key, value]) => `${escapeHtml(key)}: ${escapeHtml(value)}`).join(" · ")}</small></details>` : ""}</div>
+      <div class="election-row-actions"><button type="button" data-member-reset="${escapeHtml(member.id)}">Reset password</button><button type="button" data-member-active="${member.active ? "false" : "true"}" data-member-id="${escapeHtml(member.id)}">${member.active ? "Deactivate" : "Reinstate"}</button><button type="button" data-member-delete="${escapeHtml(member.id)}">Delete details</button></div>
+    </div>`).join("") : '<p class="empty-list">Import or add the eligible members to create voter accounts.</p>';
+
+  const electionList = document.querySelector("#election-admin-list");
+  electionList.innerHTML = electionAdminData.elections.length ? electionAdminData.elections.map((election) => {
+    const turnoutPercent = election.eligibleCount ? Math.round((election.participationCount / election.eligibleCount) * 100) : 0;
+    const resultsReady = election.status === "closed" || Date.parse(election.endsAt) <= Date.now();
+    const results = resultsReady ? election.positions.map((position) => {
+      const sorted = [...position.results].sort((a, b) => b.votes - a.votes);
+      const tied = sorted.length > 1 && sorted[0].votes > 0 && sorted[0].votes === sorted[1].votes;
+      return `<div><p>${escapeHtml(position.title)}</p>${sorted.map((candidate) => `<small>${escapeHtml(candidate.name)} — ${candidate.votes} vote${candidate.votes === 1 ? "" : "s"}</small>`).join("")}${tied ? '<small class="tie-warning">Tie recorded. Create a runoff ballot if required by the election rules.</small>' : ""}</div>`;
+    }).join("") : "";
+    const quorumWarning = resultsReady && election.quorumPercent > 0 && turnoutPercent < election.quorumPercent
+      ? '<small class="quorum-warning">Quorum not reached. Check the constitution before confirming these results.</small>' : "";
+    return `<article class="election-card">
+      <div class="election-card-main"><strong>${escapeHtml(election.title)}</strong><small>${election.positions.map((position) => escapeHtml(position.title)).join(" · ")}</small><small>${new Date(election.startsAt).toLocaleString()} – ${new Date(election.endsAt).toLocaleString()}</small><small>Turnout: ${election.participationCount}/${election.eligibleCount} (${turnoutPercent}%) · Quorum: ${election.quorumPercent || 0}%</small><span class="election-status ${escapeHtml(election.status)}">${escapeHtml(election.status)}</span>${results ? `<div class="election-results">${quorumWarning}${results}</div>` : ""}</div>
+      <div class="election-actions">${election.status === "draft" ? `<button type="button" data-election-status="open" data-election-id="${escapeHtml(election.id)}">Open voting</button>` : ""}${election.status === "open" ? `<button type="button" data-election-status="closed" data-election-id="${escapeHtml(election.id)}">Close voting</button>` : ""}</div>
+    </article>`;
+  }).join("") : '<p class="empty-list">No elections yet. Create a draft after importing the voter roster.</p>';
+}
+
+async function refreshElectionAdmin() {
+  electionAdminData = await request("/api/admin/elections");
+  renderElectionAdmin();
+}
+
+function addElectionPosition() {
+  const position = element("article", "election-position-editor");
+  position.innerHTML = '<label>Position title<input data-position-title required maxlength="100" placeholder="Treasurer" /></label><label>Candidates, one per line: Name | Member ID | optional statement<textarea data-position-candidates required rows="4" placeholder="Full Name | BEA003 | Candidate statement\nOther Name | BEA004 | Candidate statement"></textarea></label><button class="text-button" data-remove-position type="button">Remove position</button>';
+  document.querySelector("#election-position-list").append(position);
+}
+
+function setElectionPositionRemoveButtons() {
+  const editors = [...document.querySelectorAll(".election-position-editor")];
+  editors.forEach((editor) => { editor.querySelector("[data-remove-position]").hidden = editors.length === 1; });
+}
+
+document.querySelector("#add-election-position").addEventListener("click", addElectionPosition);
+document.querySelector("#election-position-list").addEventListener("click", (event) => {
+  const remove = event.target.closest("[data-remove-position]");
+  if (remove) {
+    remove.closest(".election-position-editor").remove();
+    setElectionPositionRemoveButtons();
+  }
+});
+
+document.querySelector("#member-import-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const file = event.currentTarget.elements.roster.files[0];
+  if (!file) return;
+  try {
+    const rows = parseCsv(await file.text());
+    const result = await request("/api/admin/elections/members/import", { method: "POST", body: JSON.stringify({ members: rows }) });
+    if (result.imported.length) offerMemberCredentials(result.imported);
+    await refreshElectionAdmin();
+    event.currentTarget.reset();
+    showToast(`${result.imported.length} member${result.imported.length === 1 ? "" : "s"} added; ${result.skipped} duplicate${result.skipped === 1 ? "" : "s"} skipped. Download the temporary passwords below.`);
+  } catch (error) {
+    showToast(error.message, true);
+  }
+});
+
+document.querySelector("#member-add-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const member = Object.fromEntries(new FormData(form).entries());
+  try {
+    const result = await request("/api/admin/elections/members/import", { method: "POST", body: JSON.stringify({ members: [member] }) });
+    if (!result.imported.length) throw new Error("That member ID is already on the roster.");
+    offerMemberCredentials(result.imported);
+    form.reset();
+    await refreshElectionAdmin();
+    showToast("Member added. Download the temporary password below and share it privately.");
+  } catch (error) {
+    showToast(error.message, true);
+  }
+});
+
+document.querySelector("#election-create-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  try {
+    const positions = [...document.querySelectorAll(".election-position-editor")].map((editor) => {
+      const candidates = editor.querySelector("[data-position-candidates]").value.split(/\r?\n/).map((line) => {
+        const [name = "", memberId = "", ...statement] = line.split("|").map((part) => part.trim());
+        return { name, memberId, statement: statement.join(" | ") };
+      }).filter((candidate) => candidate.name || candidate.memberId);
+      return { title: editor.querySelector("[data-position-title]").value.trim(), candidates };
+    });
+    const payload = Object.fromEntries(new FormData(form).entries());
+    payload.startsAt = new Date(payload.startsAt).toISOString();
+    payload.endsAt = new Date(payload.endsAt).toISOString();
+    payload.quorumPercent = Number(payload.quorumPercent);
+    payload.positions = positions;
+    await request("/api/admin/elections", { method: "POST", body: JSON.stringify(payload) });
+    form.reset();
+    const positionsList = document.querySelector("#election-position-list");
+    positionsList.innerHTML = `<article class="election-position-editor"><label>Position title<input data-position-title required maxlength="100" placeholder="Director" /></label><label>Candidates, one per line: Name | Member ID | optional statement<textarea data-position-candidates required rows="4" placeholder="Jane Banda | BEA001 | Candidate statement\nJohn Phiri | BEA002 | Candidate statement"></textarea></label><button class="text-button" data-remove-position type="button" hidden>Remove position</button></article>`;
+    form.elements.quorumPercent.value = "0";
+    await refreshElectionAdmin();
+    showToast("Election saved as a draft. Review it, then open voting when ready.");
+  } catch (error) {
+    showToast(error.message, true);
+  }
+});
+
+document.querySelector("#election-member-list").addEventListener("click", async (event) => {
+  const deleteButton = event.target.closest("[data-member-delete]");
+  if (deleteButton) {
+    const member = electionAdminData.members.find((item) => item.id === deleteButton.dataset.memberDelete);
+    if (!member || !confirm(`Permanently delete ${member.name}'s member details and sign-in account? This cannot be undone. Anonymous participation records are kept to prevent another ballot in completed elections.`)) return;
+    try {
+      await request(`/api/admin/elections/members/${encodeURIComponent(member.id)}`, { method: "DELETE" });
+      await refreshElectionAdmin();
+      showToast("Member details deleted. Anonymous election records were preserved.");
+    } catch (error) { showToast(error.message, true); }
+    return;
+  }
+  const resetButton = event.target.closest("[data-member-reset]");
+  if (resetButton) {
+    const member = electionAdminData.members.find((item) => item.id === resetButton.dataset.memberReset);
+    if (!member || !confirm(`Create a new temporary password for ${member.name}? Their existing password will stop working.`)) return;
+    try {
+      const result = await request(`/api/admin/elections/members/${encodeURIComponent(member.id)}/reset-password`, { method: "POST", body: JSON.stringify({}) });
+      offerMemberCredentials([result.credential]);
+      showToast("Password reset. Download the new temporary password below and share it privately.");
+    } catch (error) { showToast(error.message, true); }
+    return;
+  }
+  const button = event.target.closest("[data-member-active]");
+  if (!button) return;
+  const active = button.dataset.memberActive === "true";
+  const member = electionAdminData.members.find((item) => item.id === button.dataset.memberId);
+  if (!member || !confirm(`${active ? "Reinstate" : "Remove"} ${member.name} ${active ? "as an eligible voter" : "from the eligible voter list"}? Historical ballots and participation counts will be kept.`)) return;
+  try {
+    await request(`/api/admin/elections/members/${encodeURIComponent(member.id)}/active`, { method: "POST", body: JSON.stringify({ active }) });
+    await refreshElectionAdmin();
+    showToast(active ? "Member reinstated." : "Member removed from the active roster.");
+  } catch (error) { showToast(error.message, true); }
+});
+
+document.querySelector("#election-admin-list").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-election-status]");
+  if (!button) return;
+  const status = button.dataset.electionStatus;
+  const election = electionAdminData.elections.find((item) => item.id === button.dataset.electionId);
+  if (!election || !confirm(`${status === "open" ? "Open voting for" : "Close voting for"} “${election.title}”?`)) return;
+  try {
+    await request(`/api/admin/elections/${encodeURIComponent(election.id)}/status`, { method: "POST", body: JSON.stringify({ status }) });
+    await refreshElectionAdmin();
+    showToast(status === "open" ? "Election opened. Members can vote during the scheduled voting window." : "Voting closed. Admin can now review results.");
+  } catch (error) { showToast(error.message, true); }
 });
 
 document.querySelector("#refresh-inquiries").addEventListener("click", async () => {

@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="admin.css?v=sync-notice-1" />
+    <link rel="stylesheet" href="elections-admin.css?v=elections-admin-1" />
   </head>
   <body>
     <aside class="sidebar" id="sidebar">
@@ -20,6 +21,7 @@
       <nav class="side-nav" aria-label="Website management">
         <a class="active" href="#overview"><span>▦</span> Overview</a>
         <a href="#inquiries"><span>✉</span> Inquiries</a>
+        <a href="#elections"><span>✓</span> Elections & voting</a>
         <a href="#profile"><span>◉</span> Main profile</a>
         <a href="#page-backgrounds"><span>▧</span> Page backgrounds</a>
         <a href="#research"><span>⌕</span> Research</a>
@@ -139,6 +141,59 @@
           <div class="inquiry-list" id="inquiry-list"><p class="empty-list">Loading inquiries…</p></div>
         </section>
 
+        <section class="panel manager-panel" id="elections">
+          <div class="panel-heading">
+            <div><p class="eyebrow">MEMBER GOVERNANCE</p><h2>Elections & voting</h2><p class="panel-description">Set up the eligible member roster and annual executive elections. Members sign in with individual credentials and can submit one secret ballot per election.</p></div>
+            <a class="secondary-button" href="vote.html" target="_blank" rel="noreferrer">Open member voting ↗</a>
+          </div>
+          <div class="election-admin-grid">
+            <article class="election-admin-card">
+              <h3>Eligible member roster</h3>
+              <p>Import a CSV with at least <code>memberId,name</code>. Common columns such as <code>email,phone,programme,yearJoined</code> are recognized; other non-empty columns are kept in the private member record. Do not include passwords or secret credentials. New members receive a generated temporary password in a one-time download; share it privately. You can deactivate accounts or permanently delete roster details. Candidate names stay on election records; anonymous participation records remain to prevent repeat voting.</p>
+              <form id="member-import-form">
+                <label>Member roster CSV<input type="file" name="roster" accept=".csv,text/csv" required /></label>
+                <small>For an Excel workbook, use Save As → CSV UTF-8, then upload the CSV. Member ID and full name are required.</small>
+                <button class="secondary-button" id="download-roster-template" type="button">Download CSV template</button>
+                <button class="primary-button" type="submit">Import eligible members</button>
+              </form>
+              <form id="member-add-form" class="member-add-form">
+                <strong>Add one member</strong>
+                <label>Member ID<input name="memberId" required maxlength="80" /></label>
+                <label>Full name<input name="name" required maxlength="120" /></label>
+                <label>Email address<input name="email" type="email" maxlength="160" /></label>
+                <label>Phone number<input name="phone" maxlength="40" /></label>
+                <label>Programme<input name="programme" maxlength="120" /></label>
+                <label>Year joined<input name="yearJoined" maxlength="12" /></label>
+                <button class="secondary-button" type="submit">Add member and issue password</button>
+              </form>
+              <p class="election-roster-count" id="election-roster-count">Loading eligible members…</p>
+              <div class="election-member-list" id="election-member-list"></div>
+              <div class="election-import-result" id="member-credential-download" hidden><p id="member-credential-message"></p><button class="secondary-button" id="download-member-credentials" type="button">Download temporary passwords</button></div>
+            </article>
+            <article class="election-admin-card">
+              <h3>Create an election</h3>
+              <p>Draft elections do not accept ballots. Candidates must be members in the imported roster. Add every executive position and its candidates before opening voting.</p>
+              <form id="election-create-form" class="election-create-form">
+                <label>Election name<input name="title" required maxlength="140" placeholder="2026 BEA Executive Elections" /></label>
+                <label>Voting opens<input name="startsAt" type="datetime-local" required /></label>
+                <label>Voting closes<input name="endsAt" type="datetime-local" required /></label>
+                <label>Quorum required (%)<input name="quorumPercent" type="number" min="0" max="100" step="1" value="0" required /><small>Set 0 if the constitution does not require a quorum. A tie is shown in results; create a runoff election if required by the rules.</small></label>
+                <label>Voting instructions<textarea name="instructions" rows="3" maxlength="1000" placeholder="Read each candidate statement and select one person for every position."></textarea></label>
+                <div class="election-positions-heading"><strong>Executive positions</strong><button class="secondary-button" id="add-election-position" type="button">＋ Add position</button></div>
+                <div class="election-position-list" id="election-position-list">
+                  <article class="election-position-editor">
+                    <label>Position title<input data-position-title required maxlength="100" placeholder="Director" /></label>
+                    <label>Candidates, one per line: Name | Member ID | optional statement<textarea data-position-candidates required rows="4" placeholder="Jane Banda | BEA001 | Candidate statement&#10;John Phiri | BEA002 | Candidate statement"></textarea></label>
+                    <button class="text-button" data-remove-position type="button" hidden>Remove position</button>
+                  </article>
+                </div>
+                <button class="primary-button" type="submit">Save election as draft</button>
+              </form>
+            </article>
+          </div>
+          <div class="election-list-wrap"><h3>Election schedule and results</h3><div class="election-admin-list" id="election-admin-list"><p class="empty-list">Loading elections…</p></div></div>
+        </section>
+
         <section class="panel manager-panel" id="research" data-collection="research">
           <div class="panel-heading"><div><p class="eyebrow">KNOWLEDGE HUB</p><h2>Research projects</h2><p class="panel-description">Shown on the home page and Research page.</p></div><button class="primary-button add-item" data-add="research" type="button">＋ Add research</button></div>
           <div class="managed-list" id="list-research"></div>
@@ -200,6 +255,6 @@
       </form>
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="admin.js?v=sync-notice-1"></script>
+    <script src="admin.js?v=elections-admin-1"></script>
   </body>
 </html>
