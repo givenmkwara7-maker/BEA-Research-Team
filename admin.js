@@ -415,6 +415,7 @@ itemForm.elements.imageFile.addEventListener("change", async (event) => {
     });
     itemForm.elements.image.value = dataUrl;
     updateItemImagePreview(dataUrl);
+    showToast("Photo loaded. Click Save item to publish it.");
   } catch (error) {
     showToast(error.message, true);
     event.currentTarget.value = "";

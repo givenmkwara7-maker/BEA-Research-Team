@@ -142,12 +142,36 @@ function updateProfile(profile) {
   document.title = `${profile.shortName} Research Team | ${profile.campus}`;
 }
 
+function currentBackgroundPage() {
+  return location.pathname.split("/").pop().replace(/\.html$/i, "");
+}
+
+function setPageBackground(hero, page, image) {
+  if (!image) return;
+  hero.style.setProperty("--page-hero-image", `url(${JSON.stringify(image)})`);
+  try {
+    localStorage.setItem(`bea-page-background:${page}`, image);
+  } catch {
+    // The live background still works if browser storage is unavailable or full.
+  }
+}
+
+function applyCachedPageBackground() {
+  const hero = document.querySelector(".page-hero");
+  if (!hero) return;
+  const page = currentBackgroundPage();
+  try {
+    setPageBackground(hero, page, localStorage.getItem(`bea-page-background:${page}`));
+  } catch {
+    // Continue and load the current background from the server below.
+  }
+}
+
 function applyPageBackground(site) {
   const hero = document.querySelector(".page-hero");
   if (!hero) return;
-  const page = location.pathname.split("/").pop().replace(/\.html$/i, "");
-  const image = site.pageBackgrounds?.[page];
-  if (image) hero.style.setProperty("--page-hero-image", `url(${JSON.stringify(image)})`);
+  const page = currentBackgroundPage();
+  setPageBackground(hero, page, site.pageBackgrounds?.[page]);
 }
 
 function showLocalContentNotice() {
@@ -422,4 +446,5 @@ async function loadPublicContent() {
   }
 }
 
+applyCachedPageBackground();
 loadPublicContent();

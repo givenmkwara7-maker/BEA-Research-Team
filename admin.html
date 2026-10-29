@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="admin.css?v=inquiries-1" />
+    <link rel="stylesheet" href="admin.css?v=sync-notice-1" />
   </head>
   <body>
     <aside class="sidebar" id="sidebar">
@@ -184,7 +184,7 @@
         <label id="year-wrap">Year<input name="year" maxlength="12" /></label>
         <label id="summary-wrap">Description<textarea name="summary" rows="4" maxlength="1200"></textarea></label>
         <label id="details-wrap">Full report / story details<textarea name="details" rows="8" maxlength="12000" placeholder="Add the complete report, outcomes, key activities, lessons, or other information for readers."></textarea></label>
-        <label id="image-wrap">Image URL<input name="image" maxlength="1000" placeholder="https://…" /><span class="upload-hint">Or upload a JPG, PNG, or WebP image under 700 KB<input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp" /></span><img id="item-image-preview" class="item-image-preview" alt="Image preview" hidden /></label>
+        <label id="image-wrap">Image URL<input name="image" maxlength="1000" placeholder="https://…" /><span class="upload-hint">Or upload a JPG, PNG, or WebP image under 700 KB. Click Save item to publish it.<input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp" /></span><img id="item-image-preview" class="item-image-preview" alt="Image preview" hidden /></label>
         <div class="dialog-actions"><button class="secondary-button" data-close type="button">Cancel</button><button class="primary-button" type="submit">Save item</button></div>
       </form>
     </dialog>
@@ -200,6 +200,6 @@
       </form>
     </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="admin.js?v=inquiries-1"></script>
+    <script src="admin.js?v=sync-notice-1"></script>
   </body>
 </html>
