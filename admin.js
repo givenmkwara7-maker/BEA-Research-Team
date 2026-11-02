@@ -625,13 +625,14 @@ document.querySelector("#election-position-list").addEventListener("click", (eve
 
 document.querySelector("#member-import-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const file = event.currentTarget.elements.roster.files[0];
+  const form = event.currentTarget;
+  const file = form.elements.roster.files[0];
   if (!file) return;
   try {
     const rows = parseCsv(await file.text());
     const result = await request("/api/admin/elections/members/import", { method: "POST", body: JSON.stringify({ members: rows }) });
     await refreshElectionAdmin();
-    event.currentTarget.reset();
+    form.reset();
     showToast(`${result.added} member${result.added === 1 ? "" : "s"} added and ${result.updated} existing member${result.updated === 1 ? "" : "s"} updated.`);
   } catch (error) {
     showToast(error.message, true);
