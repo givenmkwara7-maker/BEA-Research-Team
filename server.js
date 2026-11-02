@@ -555,18 +555,27 @@ async function handleApi(request, response, url) {
       const importSummary = await updateElectionStore((data) => {
         let added = 0;
         let updated = 0;
-        for (const row of body.members) {
+        for (const [rowIndex, row] of body.members.entries()) {
           const memberId = String(row.memberId || "").trim();
           const name = String(row.name || "").trim();
-          const email = String(row.email || "").trim();
-          const phone = String(row.phone || "").trim();
-          const programme = String(row.programme || "").trim();
-          const yearOfStudy = String(row.yearOfStudy || "").trim();
+          const optionalText = (value) => {
+            const text = String(value || "").trim();
+            return /^(?:n\/?a|none|null|[-—])$/i.test(text) ? "" : text;
+          };
+          const email = optionalText(row.email);
+          const phone = optionalText(row.phone);
+          const programme = optionalText(row.programme);
+          const yearOfStudy = optionalText(row.yearOfStudy);
           const details = row.details && typeof row.details === "object" && !Array.isArray(row.details) ? row.details : {};
-          if (!/^[\w.@+\/-]{2,80}$/.test(memberId) || name.length < 2 || name.length > 120 || email.length > 160 || phone.length > 40 || programme.length > 120 || yearOfStudy.length > 40 ||
-              Object.entries(details).length > 40 || Object.entries(details).some(([key, value]) => !key || key.length > 50 || typeof value !== "string" || value.length > 500) ||
-              (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
-            throw new Error("Each roster row needs a valid member ID and name; email is optional.");
+          const rowLabel = `Spreadsheet row ${rowIndex + 2}`;
+          if (!/^[\w.@+\/-]{2,80}$/.test(memberId)) throw new Error(`${rowLabel}: registration number is missing or contains unsupported characters.`);
+          if (name.length < 2 || name.length > 120) throw new Error(`${rowLabel}: enter a full name between 2 and 120 characters.`);
+          if (email.length > 160 || (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) throw new Error(`${rowLabel}: email address is invalid. Leave it blank if the member has no email.`);
+          if (phone.length > 40) throw new Error(`${rowLabel}: phone number is too long (maximum 40 characters).`);
+          if (programme.length > 120) throw new Error(`${rowLabel}: programme is too long (maximum 120 characters).`);
+          if (yearOfStudy.length > 40) throw new Error(`${rowLabel}: year of study is too long (maximum 40 characters).`);
+          if (Object.entries(details).length > 40 || Object.entries(details).some(([key, value]) => !key || key.length > 50 || typeof value !== "string" || value.length > 500)) {
+            throw new Error(`${rowLabel}: one of the extra columns contains too much text.`);
           }
           const existing = data.members.find((member) => member.memberId.toLowerCase() === memberId.toLowerCase());
           const salt = crypto.randomBytes(16);
