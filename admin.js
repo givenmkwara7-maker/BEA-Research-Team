@@ -109,6 +109,14 @@ function populateProfile() {
     const field = profileForm.elements.namedItem(name);
     if (field && field.type !== "file") field.value = value || "";
   }
+  updateHeroImagePreview(siteData.profile.heroImage || "");
+}
+
+function updateHeroImagePreview(source) {
+  const preview = document.querySelector("#hero-image-preview");
+  preview.hidden = !source;
+  if (source) preview.src = source;
+  else preview.removeAttribute("src");
 }
 
 function updateBackgroundPreview(page, source) {
@@ -765,7 +773,7 @@ profileForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const formData = new FormData(profileForm);
   for (const [name, value] of formData.entries()) {
-    if (!['logoFile', 'logo'].includes(name)) {
+    if (!['logoFile', 'logo', 'heroImageFile'].includes(name)) {
       siteData.profile[name] = String(value).trim();
     }
   }
@@ -773,6 +781,36 @@ profileForm.addEventListener("submit", async (event) => {
   if (uploadedLogoData) siteData.profile.logo = uploadedLogoData;
   else if (logoUrl) siteData.profile.logo = logoUrl;
   await saveSite("Main profile updated. The public site now uses your changes.");
+});
+
+profileForm.elements.heroImageFile.addEventListener("change", async () => {
+  const input = profileForm.elements.heroImageFile;
+  const file = input.files[0];
+  if (!file) return;
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    showToast("Choose a JPG, PNG, or WebP homepage cover image.", true);
+    input.value = "";
+    return;
+  }
+  if (file.size > 700_000) {
+    showToast("Please choose a homepage cover image smaller than 700 KB.", true);
+    input.value = "";
+    return;
+  }
+  try {
+    const source = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("This homepage cover image could not be read."));
+      reader.readAsDataURL(file);
+    });
+    profileForm.elements.heroImage.value = source;
+    updateHeroImagePreview(source);
+    showToast("Homepage cover image loaded. Save the main profile to publish it.");
+  } catch (error) {
+    showToast(error.message, true);
+    input.value = "";
+  }
 });
 
 profileForm.elements.logo.addEventListener("input", () => {

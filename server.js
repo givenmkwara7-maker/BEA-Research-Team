@@ -146,6 +146,7 @@ function validSiteData(data) {
   if (!data || typeof data !== "object" || !data.profile) return false;
   if (typeof data.profile !== "object") return false;
   if (!data.profile.name || !data.profile.shortName || !data.profile.logo) return false;
+  if (data.profile.heroImage !== undefined && (typeof data.profile.heroImage !== "string" || data.profile.heroImage.length > 1_000_000)) return false;
   const validCollections = collections.every(
     (name) => Array.isArray(data[name]) && data[name].length <= 200,
   );
