@@ -79,7 +79,7 @@ function renderElection(election) {
 async function showMemberArea(member) {
   loginCard.hidden = true;
   memberArea.hidden = false;
-  document.querySelector("#vote-member-name").textContent = `${member.name} (${member.memberId})`;
+  document.querySelector("#vote-member-name").textContent = member.name;
   await loadElections();
 }
 
@@ -124,30 +124,6 @@ document.querySelector("#vote-sign-out").addEventListener("click", async () => {
   memberArea.hidden = true;
   loginCard.hidden = false;
   setLoginError("");
-});
-
-document.querySelector("#change-password-toggle").addEventListener("click", () => {
-  const form = document.querySelector("#vote-password-form");
-  form.hidden = !form.hidden;
-  if (!form.hidden) form.elements.password.focus();
-});
-
-document.querySelector("#vote-password-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const error = document.querySelector("#vote-password-error");
-  const button = form.querySelector("button[type=submit]");
-  error.hidden = true;
-  button.disabled = true;
-  try {
-    await api("/api/vote/password", { method: "POST", body: JSON.stringify({ password: form.elements.password.value }) });
-    form.reset();
-    form.hidden = true;
-    showToast("Your password has been updated.");
-  } catch (problem) {
-    error.textContent = problem.message;
-    error.hidden = false;
-  } finally { button.disabled = false; }
 });
 
 async function restoreVoterSession() {

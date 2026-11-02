@@ -516,33 +516,6 @@ async function handleApi(request, response, url) {
     return;
   }
 
-  const memberResetMatch = url.pathname.match(/^\/api\/admin\/elections\/members\/([\w-]+)\/reset-password$/);
-  if (memberResetMatch && request.method === "POST") {
-    if (!hasSameOrigin(request)) {
-      sendJson(response, 403, { error: "Request origin was rejected." });
-      return;
-    }
-    if (!requireSession(request, response)) return;
-    try {
-      const result = await updateElectionStore((data) => {
-        const member = data.members.find((item) => item.id === memberResetMatch[1]);
-        if (!member) throw new Error("Member not found.");
-        const password = crypto.randomBytes(9).toString("base64url");
-        const salt = crypto.randomBytes(16);
-        member.passwordSalt = salt.toString("hex");
-        member.passwordHash = crypto.scryptSync(password, salt, 64).toString("hex");
-        return { memberId: member.memberId, name: member.name, temporaryPassword: password };
-      });
-      for (const [sessionId, session] of voterSessions) {
-        if (session.memberId === result.memberId) voterSessions.delete(sessionId);
-      }
-      sendJson(response, 200, { credential: result });
-    } catch (error) {
-      sendJson(response, 400, { error: error.message || "The password could not be reset." });
-    }
-    return;
-  }
-
   const memberDeleteMatch = url.pathname.match(/^\/api\/admin\/elections\/members\/([\w-]+)$/);
   if (memberDeleteMatch && request.method === "DELETE") {
     if (!hasSameOrigin(request)) {
@@ -579,9 +552,9 @@ async function handleApi(request, response, url) {
         sendJson(response, 400, { error: "Upload a roster with between 1 and 200 members." });
         return;
       }
-      const credentials = await updateElectionStore((data) => {
-        const knownIds = new Set(data.members.map((member) => member.memberId.toLowerCase()));
-        const imported = [];
+      const importSummary = await updateElectionStore((data) => {
+        let added = 0;
+        let updated = 0;
         for (const row of body.members) {
           const memberId = String(row.memberId || "").trim();
           const name = String(row.name || "").trim();
@@ -595,21 +568,24 @@ async function handleApi(request, response, url) {
               (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
             throw new Error("Each roster row needs a valid member ID and name; email is optional.");
           }
-          const key = memberId.toLowerCase();
-          if (knownIds.has(key)) continue;
-          knownIds.add(key);
-          const password = crypto.randomBytes(9).toString("base64url");
+          const existing = data.members.find((member) => member.memberId.toLowerCase() === memberId.toLowerCase());
           const salt = crypto.randomBytes(16);
-          data.members.push({
-            id: crypto.randomUUID(), memberId, name, email, phone, programme, yearOfStudy, details, active: true,
+          const memberDetails = {
+            memberId, name, email, phone, programme, yearOfStudy, details,
             passwordSalt: salt.toString("hex"),
-            passwordHash: crypto.scryptSync(password, salt, 64).toString("hex"),
-          });
-          imported.push({ memberId, name, email, phone, programme, yearOfStudy, temporaryPassword: password });
+            passwordHash: crypto.scryptSync(memberId.toLowerCase(), salt, 64).toString("hex"),
+          };
+          if (existing) {
+            Object.assign(existing, memberDetails);
+            updated += 1;
+          } else {
+            data.members.push({ id: crypto.randomUUID(), ...memberDetails, active: true });
+            added += 1;
+          }
         }
-        return imported;
+        return { added, updated };
       });
-      sendJson(response, 200, { imported: credentials, skipped: body.members.length - credentials.length });
+      sendJson(response, 200, importSummary);
     } catch (error) {
       sendJson(response, 400, { error: error.message || "The roster could not be imported." });
     }
@@ -723,38 +699,6 @@ async function handleApi(request, response, url) {
     return;
   }
 
-  if (url.pathname === "/api/vote/password" && request.method === "POST") {
-    if (!hasSameOrigin(request)) {
-      sendJson(response, 403, { error: "Request origin was rejected." });
-      return;
-    }
-    const session = getVoterSession(request);
-    if (!session) {
-      sendJson(response, 401, { error: "Please sign in again." });
-      return;
-    }
-    try {
-      const body = await readJson(request, 10_000);
-      const password = String(body.password || "");
-      if (password.length < 12 || password.length > 256) throw new Error("Use a password between 12 and 256 characters.");
-      await updateElectionStore((data) => {
-        const member = data.members.find((item) => item.memberId === session.memberId && item.active !== false);
-        if (!member) throw new Error("This member account is no longer active.");
-        const salt = crypto.randomBytes(16);
-        member.passwordSalt = salt.toString("hex");
-        member.passwordHash = crypto.scryptSync(password, salt, 64).toString("hex");
-      });
-      const currentSessionId = getCookie(request, VOTER_COOKIE);
-      for (const [sessionId, voterSession] of voterSessions) {
-        if (sessionId !== currentSessionId && voterSession.memberId === session.memberId) voterSessions.delete(sessionId);
-      }
-      sendJson(response, 200, { updated: true });
-    } catch (error) {
-      sendJson(response, 400, { error: error.message || "The password could not be changed." });
-    }
-    return;
-  }
-
   if (url.pathname === "/api/vote/login" && request.method === "POST") {
     if (!hasSameOrigin(request)) {
       sendJson(response, 403, { error: "Request origin was rejected." });
@@ -768,21 +712,23 @@ async function handleApi(request, response, url) {
     }
     try {
       const credentials = await readJson(request, 10_000);
-      const memberId = String(credentials.memberId || "").trim();
-      const password = String(credentials.password || "");
+      const name = String(credentials.name || "").trim().replace(/\s+/g, " ");
+      const registrationNumber = String(credentials.registrationNumber || "").trim();
       const data = await loadElectionStore();
-      const member = data.members.find((item) => item.memberId.toLowerCase() === memberId.toLowerCase() && item.active !== false);
+      const normalizedName = name.toLocaleLowerCase();
+      const member = data.members.find((item) => item.memberId.toLowerCase() === registrationNumber.toLowerCase() &&
+        String(item.name || "").trim().replace(/\s+/g, " ").toLocaleLowerCase() === normalizedName && item.active !== false);
       const salt = Buffer.from(member?.passwordSalt || "", "hex");
       const storedHash = Buffer.from(member?.passwordHash || "", "hex");
-      const suppliedHash = crypto.scryptSync(password.slice(0, 256), salt.length ? salt : Buffer.alloc(16), 64);
-      if (!member || password.length > 256 || storedHash.length !== suppliedHash.length || !crypto.timingSafeEqual(suppliedHash, storedHash)) {
+      const suppliedHash = crypto.scryptSync(registrationNumber.toLowerCase().slice(0, 80), salt.length ? salt : Buffer.alloc(16), 64);
+      if (!member || !name || name.length > 120 || !registrationNumber || registrationNumber.length > 80 || storedHash.length !== suppliedHash.length || !crypto.timingSafeEqual(suppliedHash, storedHash)) {
         attempt.count += 1;
         if (attempt.count >= 5) {
           attempt.count = 0;
           attempt.blockedUntil = Date.now() + 15 * 60 * 1000;
         }
         voterLoginAttempts.set(ip, attempt);
-        sendJson(response, 401, { error: "That member ID or password is not correct." });
+        sendJson(response, 401, { error: "That name or registration number does not match the member roster." });
         return;
       }
       voterLoginAttempts.delete(ip);

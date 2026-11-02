@@ -21,24 +21,19 @@
     <main class="vote-main">
       <section class="vote-heading"><p class="eyebrow">BEA MEMBER PORTAL</p><h1>Executive elections</h1><p>Eligible members can review candidates and cast one private ballot during each open election.</p></section>
       <section class="vote-auth-card" id="vote-login-card">
-        <p class="eyebrow">MEMBER SIGN IN</p><h2>Access your ballot</h2><p>Use the unique member ID and password provided by the BEA administrator.</p>
+        <p class="eyebrow">MEMBER SIGN IN</p><h2>Access your ballot</h2><p>Enter your full name and student registration number exactly as they appear in the member roster.</p>
         <form id="vote-login-form">
-          <label>Member ID<input name="memberId" autocomplete="username" required maxlength="80" /></label>
-          <label>Password<input name="password" type="password" autocomplete="current-password" required maxlength="256" /></label>
+          <label>Full name<input name="name" autocomplete="name" required maxlength="120" /></label>
+          <label>Student registration number<input name="registrationNumber" autocomplete="username" required maxlength="80" /></label>
           <p class="vote-error" id="vote-login-error" role="alert" hidden></p>
           <button class="button" type="submit">Sign in to vote <span>→</span></button>
         </form>
       </section>
       <section class="vote-member-area" id="vote-member-area" hidden>
-        <div class="vote-account"><p>Signed in as <strong id="vote-member-name"></strong></p><div><button class="vote-link-button" id="change-password-toggle" type="button">Change password</button><button class="vote-link-button" id="vote-sign-out" type="button">Sign out</button></div></div>
-        <form class="vote-password-form" id="vote-password-form" hidden>
-          <label>New password (at least 12 characters)<input name="password" type="password" minlength="12" autocomplete="new-password" required /></label>
-          <button class="button" type="submit">Update password</button>
-          <p class="vote-error" id="vote-password-error" role="alert" hidden></p>
-        </form>
+        <div class="vote-account"><p>Signed in as <strong id="vote-member-name"></strong></p><div><button class="vote-link-button" id="vote-sign-out" type="button">Sign out</button></div></div>
         <div class="vote-election-list" id="vote-election-list"><p class="vote-loading">Loading available elections…</p></div>
       </section>
-      <p class="vote-privacy">Ballots are stored separately from voter participation records. The system records whether your member ID has voted, without storing your choices against your identity.</p>
+      <p class="vote-privacy">Ballots are stored separately from voter participation records. The system records whether your registration number has voted, without storing your choices against your identity.</p>
     </main>
     <footer class="vote-footer"><a href="index.html">← Return to the BEA website</a></footer>
     <div class="vote-toast" id="vote-toast" role="status" aria-live="polite"></div>

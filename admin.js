@@ -49,7 +49,6 @@ let toastTimer;
 let activeCollection;
 let uploadedLogoData = "";
 let electionAdminData = { members: [], elections: [] };
-let pendingMemberCredentials = [];
 
 function showToast(message, isError = false) {
   toast.textContent = message;
@@ -530,15 +529,15 @@ function parseCsv(text) {
   if (quoted) throw new Error("The CSV has an unfinished quoted field.");
   if (rows.length < 2) throw new Error("The CSV needs a heading row and at least one member.");
   const rawHeaders = rows.shift().map((header) => header.replace(/^\uFEFF/, "").trim());
-  const headers = rawHeaders.map((header) => header.toLowerCase().replace(/[\s_-]+/g, ""));
+  const headers = rawHeaders.map((header) => header.toLowerCase().replace(/[^a-z0-9]/g, ""));
   const indexFor = (...names) => headers.findIndex((header) => names.includes(header));
-  const memberIndex = indexFor("memberid", "id", "membershipid", "membernumber");
+  const memberIndex = indexFor("registrationnumber", "studentregistrationnumber", "registrationno", "registernumber", "regnumber", "memberid", "id", "membershipid", "membernumber");
   const nameIndex = indexFor("name", "fullname", "membername");
-  if (memberIndex < 0 || nameIndex < 0) throw new Error("The CSV must include memberId and name columns.");
+  if (memberIndex < 0 || nameIndex < 0) throw new Error("The CSV must include Full Name and Registration Number columns.");
   const optionalIndex = (...names) => indexFor(...names);
   return rows.map((columns) => {
     const knownHeaders = new Set([memberIndex, nameIndex,
-      optionalIndex("email", "emailaddress"), optionalIndex("phone", "phonenumber", "mobile"),
+      optionalIndex("email", "emailaddress"), headers.findIndex((header) => ["phone", "phonenumber", "mobile"].some((name) => header.startsWith(name))),
       optionalIndex("programme", "program", "course"), optionalIndex("yearofstudy", "yearstudy", "studyyear", "year")]);
     const details = {};
     rawHeaders.forEach((header, index) => {
@@ -550,7 +549,7 @@ function parseCsv(text) {
       memberId: columns[memberIndex] || "",
       name: columns[nameIndex] || "",
       email: columns[optionalIndex("email", "emailaddress")] || "",
-      phone: columns[optionalIndex("phone", "phonenumber", "mobile")] || "",
+      phone: columns[headers.findIndex((header) => ["phone", "phonenumber", "mobile"].some((name) => header.startsWith(name)))] || "",
       programme: columns[optionalIndex("programme", "program", "course")] || "",
       yearOfStudy: columns[optionalIndex("yearofstudy", "yearstudy", "studyyear", "year")] || "",
       details,
@@ -558,37 +557,8 @@ function parseCsv(text) {
   }).filter((member) => member.memberId || member.name);
 }
 
-function downloadMemberCredentials(members) {
-  if (!members.length) return;
-  const headers = ["memberId", "name", "email", "temporaryPassword"];
-  const csv = [headers, ...members.map((member) => headers.map((header) => member[header] || ""))]
-    .map((row) => row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(","))
-    .join("\r\n");
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  const link = element("a");
-  link.href = url;
-  link.download = `bea-voter-temporary-passwords-${localDateString()}.csv`;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
-
-function offerMemberCredentials(members) {
-  pendingMemberCredentials = members;
-  document.querySelector("#member-credential-message").textContent = `${members.length} temporary password${members.length === 1 ? " was" : "s were"} generated. Download now and share privately; the passwords cannot be viewed again here.`;
-  document.querySelector("#member-credential-download").hidden = !members.length;
-}
-
-document.querySelector("#download-member-credentials").addEventListener("click", () => {
-  downloadMemberCredentials(pendingMemberCredentials);
-  pendingMemberCredentials = [];
-  document.querySelector("#member-credential-download").hidden = true;
-  showToast("Credential file downloaded. Store it securely and share it privately.");
-});
-
 document.querySelector("#download-roster-template").addEventListener("click", () => {
-  const url = URL.createObjectURL(new Blob(["memberId,name,email,phone,programme,yearOfStudy\r\n"], { type: "text/csv;charset=utf-8" }));
+  const url = URL.createObjectURL(new Blob(["FULL NAME,REGISTRATION NUMBER,YEAR OF STUDY,PHONE NUMBER (WhatsApp preferred),EMAIL,Programme\r\n"], { type: "text/csv;charset=utf-8" }));
   const link = element("a");
   link.href = url;
   link.download = "bea-member-roster-template.csv";
@@ -606,8 +576,8 @@ function renderElectionAdmin() {
   const visibleMembers = [...electionAdminData.members].sort((a, b) => a.name.localeCompare(b.name));
   memberList.innerHTML = visibleMembers.length ? visibleMembers.map((member) => `
     <div class="election-member-row ${member.active ? "" : "inactive"}">
-      <div><strong>${escapeHtml(member.name)} · ${escapeHtml(member.memberId)}</strong><small>${escapeHtml([member.email, member.phone, member.programme, member.yearOfStudy && `Year of study ${member.yearOfStudy}`, member.active ? "Eligible" : "Inactive"].filter(Boolean).join(" · "))}</small>${Object.keys(member.details || {}).length ? `<details><summary>Other member details</summary><small>${Object.entries(member.details).map(([key, value]) => `${escapeHtml(key)}: ${escapeHtml(value)}`).join(" · ")}</small></details>` : ""}</div>
-      <div class="election-row-actions"><button type="button" data-member-reset="${escapeHtml(member.id)}">Reset password</button><button type="button" data-member-active="${member.active ? "false" : "true"}" data-member-id="${escapeHtml(member.id)}">${member.active ? "Deactivate" : "Reinstate"}</button><button type="button" data-member-delete="${escapeHtml(member.id)}">Delete details</button></div>
+      <div><strong>${escapeHtml(member.name)} · Registration ${escapeHtml(member.memberId)}</strong><small>${escapeHtml([member.email, member.phone, member.programme, member.yearOfStudy && `Year of study ${member.yearOfStudy}`, member.active ? "Eligible" : "Inactive"].filter(Boolean).join(" · "))}</small>${Object.keys(member.details || {}).length ? `<details><summary>Other member details</summary><small>${Object.entries(member.details).map(([key, value]) => `${escapeHtml(key)}: ${escapeHtml(value)}`).join(" · ")}</small></details>` : ""}</div>
+      <div class="election-row-actions"><button type="button" data-member-active="${member.active ? "false" : "true"}" data-member-id="${escapeHtml(member.id)}">${member.active ? "Deactivate" : "Reinstate"}</button><button type="button" data-member-delete="${escapeHtml(member.id)}">Delete details</button></div>
     </div>`).join("") : '<p class="empty-list">Import or add the eligible members to create voter accounts.</p>';
 
   const electionList = document.querySelector("#election-admin-list");
@@ -635,7 +605,7 @@ async function refreshElectionAdmin() {
 
 function addElectionPosition() {
   const position = element("article", "election-position-editor");
-  position.innerHTML = '<label>Position title<input data-position-title required maxlength="100" placeholder="Treasurer" /></label><label>Candidates, one per line: Name | Member ID | optional statement<textarea data-position-candidates required rows="4" placeholder="Full Name | BEA003 | Candidate statement\nOther Name | BEA004 | Candidate statement"></textarea></label><button class="text-button" data-remove-position type="button">Remove position</button>';
+  position.innerHTML = '<label>Position title<input data-position-title required maxlength="100" placeholder="Treasurer" /></label><label>Candidates, one per line: Name | Registration number | optional statement<textarea data-position-candidates required rows="4" placeholder="Full Name | 230100736 | Candidate statement\nOther Name | 230101137 | Candidate statement"></textarea></label><button class="text-button" data-remove-position type="button">Remove position</button>';
   document.querySelector("#election-position-list").append(position);
 }
 
@@ -660,10 +630,9 @@ document.querySelector("#member-import-form").addEventListener("submit", async (
   try {
     const rows = parseCsv(await file.text());
     const result = await request("/api/admin/elections/members/import", { method: "POST", body: JSON.stringify({ members: rows }) });
-    if (result.imported.length) offerMemberCredentials(result.imported);
     await refreshElectionAdmin();
     event.currentTarget.reset();
-    showToast(`${result.imported.length} member${result.imported.length === 1 ? "" : "s"} added; ${result.skipped} duplicate${result.skipped === 1 ? "" : "s"} skipped. Download the temporary passwords below.`);
+    showToast(`${result.added} member${result.added === 1 ? "" : "s"} added and ${result.updated} existing member${result.updated === 1 ? "" : "s"} updated.`);
   } catch (error) {
     showToast(error.message, true);
   }
@@ -675,11 +644,10 @@ document.querySelector("#member-add-form").addEventListener("submit", async (eve
   const member = Object.fromEntries(new FormData(form).entries());
   try {
     const result = await request("/api/admin/elections/members/import", { method: "POST", body: JSON.stringify({ members: [member] }) });
-    if (!result.imported.length) throw new Error("That member ID is already on the roster.");
-    offerMemberCredentials(result.imported);
+    if (!result.added && !result.updated) throw new Error("That registration number is already on the roster.");
     form.reset();
     await refreshElectionAdmin();
-    showToast("Member added. Download the temporary password below and share it privately.");
+    showToast(result.added ? "Member added. They can sign in with their name and registration number." : "Member details updated.");
   } catch (error) {
     showToast(error.message, true);
   }
@@ -704,7 +672,7 @@ document.querySelector("#election-create-form").addEventListener("submit", async
     await request("/api/admin/elections", { method: "POST", body: JSON.stringify(payload) });
     form.reset();
     const positionsList = document.querySelector("#election-position-list");
-    positionsList.innerHTML = `<article class="election-position-editor"><label>Position title<input data-position-title required maxlength="100" placeholder="Director" /></label><label>Candidates, one per line: Name | Member ID | optional statement<textarea data-position-candidates required rows="4" placeholder="Jane Banda | BEA001 | Candidate statement\nJohn Phiri | BEA002 | Candidate statement"></textarea></label><button class="text-button" data-remove-position type="button" hidden>Remove position</button></article>`;
+    positionsList.innerHTML = `<article class="election-position-editor"><label>Position title<input data-position-title required maxlength="100" placeholder="Director" /></label><label>Candidates, one per line: Name | Registration number | optional statement<textarea data-position-candidates required rows="4" placeholder="Jane Banda | 230100736 | Candidate statement\nJohn Phiri | 230101137 | Candidate statement"></textarea></label><button class="text-button" data-remove-position type="button" hidden>Remove position</button></article>`;
     form.elements.quorumPercent.value = "0";
     await refreshElectionAdmin();
     showToast("Election saved as a draft. Review it, then open voting when ready.");
@@ -722,17 +690,6 @@ document.querySelector("#election-member-list").addEventListener("click", async 
       await request(`/api/admin/elections/members/${encodeURIComponent(member.id)}`, { method: "DELETE" });
       await refreshElectionAdmin();
       showToast("Member details deleted. Anonymous election records were preserved.");
-    } catch (error) { showToast(error.message, true); }
-    return;
-  }
-  const resetButton = event.target.closest("[data-member-reset]");
-  if (resetButton) {
-    const member = electionAdminData.members.find((item) => item.id === resetButton.dataset.memberReset);
-    if (!member || !confirm(`Create a new temporary password for ${member.name}? Their existing password will stop working.`)) return;
-    try {
-      const result = await request(`/api/admin/elections/members/${encodeURIComponent(member.id)}/reset-password`, { method: "POST", body: JSON.stringify({}) });
-      offerMemberCredentials([result.credential]);
-      showToast("Password reset. Download the new temporary password below and share it privately.");
     } catch (error) { showToast(error.message, true); }
     return;
   }
