@@ -6,8 +6,8 @@
   background: #193b32;
   color: #fff;
   padding: 105px 0 95px;
-  /* Fade the banner into the page below instead of ending on a hard edge. */
-  box-shadow: 0 38px 52px -24px rgba(255, 253, 248, .98);
+  /* A soft green glow carries the blurred photo into the content below. */
+  box-shadow: 0 38px 58px -24px rgba(22, 78, 72, .46);
 }
 
 .page-hero::before,
@@ -29,10 +29,10 @@
 }
 
 .page-hero::after {
-  /* A visible but light green veil tints the photo while leaving its details clear. */
+  /* Keep the image visible under a green veil and fade its lower edge into green. */
   background:
     linear-gradient(0deg, rgba(22, 78, 72, .34), rgba(22, 78, 72, .34)),
-    linear-gradient(to bottom, transparent 66%, rgba(255, 253, 248, .98) 100%);
+    linear-gradient(to bottom, transparent 58%, rgba(22, 78, 72, .2) 76%, rgba(22, 78, 72, .72) 100%);
 }
 
 .page-hero > .container {
