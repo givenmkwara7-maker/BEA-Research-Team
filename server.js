@@ -269,7 +269,7 @@ function publicElection(election, hasVoted, eligible) {
 function sanitizedMember(member) {
   return {
     id: member.id, memberId: member.memberId, name: member.name, email: member.email || "",
-    phone: member.phone || "", programme: member.programme || "", yearJoined: member.yearJoined || "",
+    phone: member.phone || "", programme: member.programme || "", yearOfStudy: member.yearOfStudy || "",
     details: member.details || {},
     active: member.active !== false,
   };
@@ -588,9 +588,9 @@ async function handleApi(request, response, url) {
           const email = String(row.email || "").trim();
           const phone = String(row.phone || "").trim();
           const programme = String(row.programme || "").trim();
-          const yearJoined = String(row.yearJoined || "").trim();
+          const yearOfStudy = String(row.yearOfStudy || "").trim();
           const details = row.details && typeof row.details === "object" && !Array.isArray(row.details) ? row.details : {};
-          if (!/^[\w.@+\/-]{2,80}$/.test(memberId) || name.length < 2 || name.length > 120 || email.length > 160 || phone.length > 40 || programme.length > 120 || yearJoined.length > 12 ||
+          if (!/^[\w.@+\/-]{2,80}$/.test(memberId) || name.length < 2 || name.length > 120 || email.length > 160 || phone.length > 40 || programme.length > 120 || yearOfStudy.length > 40 ||
               Object.entries(details).length > 40 || Object.entries(details).some(([key, value]) => !key || key.length > 50 || typeof value !== "string" || value.length > 500) ||
               (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
             throw new Error("Each roster row needs a valid member ID and name; email is optional.");
@@ -601,11 +601,11 @@ async function handleApi(request, response, url) {
           const password = crypto.randomBytes(9).toString("base64url");
           const salt = crypto.randomBytes(16);
           data.members.push({
-            id: crypto.randomUUID(), memberId, name, email, phone, programme, yearJoined, details, active: true,
+            id: crypto.randomUUID(), memberId, name, email, phone, programme, yearOfStudy, details, active: true,
             passwordSalt: salt.toString("hex"),
             passwordHash: crypto.scryptSync(password, salt, 64).toString("hex"),
           });
-          imported.push({ memberId, name, email, phone, programme, yearJoined, temporaryPassword: password });
+          imported.push({ memberId, name, email, phone, programme, yearOfStudy, temporaryPassword: password });
         }
         return imported;
       });

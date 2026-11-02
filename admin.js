@@ -539,7 +539,7 @@ function parseCsv(text) {
   return rows.map((columns) => {
     const knownHeaders = new Set([memberIndex, nameIndex,
       optionalIndex("email", "emailaddress"), optionalIndex("phone", "phonenumber", "mobile"),
-      optionalIndex("programme", "program", "course"), optionalIndex("yearjoined", "joined", "year")]);
+      optionalIndex("programme", "program", "course"), optionalIndex("yearofstudy", "yearstudy", "studyyear", "year")]);
     const details = {};
     rawHeaders.forEach((header, index) => {
       if (knownHeaders.has(index) || !header || /password|passcode|secret/i.test(header)) return;
@@ -552,7 +552,7 @@ function parseCsv(text) {
       email: columns[optionalIndex("email", "emailaddress")] || "",
       phone: columns[optionalIndex("phone", "phonenumber", "mobile")] || "",
       programme: columns[optionalIndex("programme", "program", "course")] || "",
-      yearJoined: columns[optionalIndex("yearjoined", "joined", "year")] || "",
+      yearOfStudy: columns[optionalIndex("yearofstudy", "yearstudy", "studyyear", "year")] || "",
       details,
     };
   }).filter((member) => member.memberId || member.name);
@@ -588,7 +588,7 @@ document.querySelector("#download-member-credentials").addEventListener("click",
 });
 
 document.querySelector("#download-roster-template").addEventListener("click", () => {
-  const url = URL.createObjectURL(new Blob(["memberId,name,email,phone,programme,yearJoined\r\n"], { type: "text/csv;charset=utf-8" }));
+  const url = URL.createObjectURL(new Blob(["memberId,name,email,phone,programme,yearOfStudy\r\n"], { type: "text/csv;charset=utf-8" }));
   const link = element("a");
   link.href = url;
   link.download = "bea-member-roster-template.csv";
@@ -606,7 +606,7 @@ function renderElectionAdmin() {
   const visibleMembers = [...electionAdminData.members].sort((a, b) => a.name.localeCompare(b.name));
   memberList.innerHTML = visibleMembers.length ? visibleMembers.map((member) => `
     <div class="election-member-row ${member.active ? "" : "inactive"}">
-      <div><strong>${escapeHtml(member.name)} · ${escapeHtml(member.memberId)}</strong><small>${escapeHtml([member.email, member.phone, member.programme, member.yearJoined && `Joined ${member.yearJoined}`, member.active ? "Eligible" : "Inactive"].filter(Boolean).join(" · "))}</small>${Object.keys(member.details || {}).length ? `<details><summary>Other member details</summary><small>${Object.entries(member.details).map(([key, value]) => `${escapeHtml(key)}: ${escapeHtml(value)}`).join(" · ")}</small></details>` : ""}</div>
+      <div><strong>${escapeHtml(member.name)} · ${escapeHtml(member.memberId)}</strong><small>${escapeHtml([member.email, member.phone, member.programme, member.yearOfStudy && `Year of study ${member.yearOfStudy}`, member.active ? "Eligible" : "Inactive"].filter(Boolean).join(" · "))}</small>${Object.keys(member.details || {}).length ? `<details><summary>Other member details</summary><small>${Object.entries(member.details).map(([key, value]) => `${escapeHtml(key)}: ${escapeHtml(value)}`).join(" · ")}</small></details>` : ""}</div>
       <div class="election-row-actions"><button type="button" data-member-reset="${escapeHtml(member.id)}">Reset password</button><button type="button" data-member-active="${member.active ? "false" : "true"}" data-member-id="${escapeHtml(member.id)}">${member.active ? "Deactivate" : "Reinstate"}</button><button type="button" data-member-delete="${escapeHtml(member.id)}">Delete details</button></div>
     </div>`).join("") : '<p class="empty-list">Import or add the eligible members to create voter accounts.</p>';
 
